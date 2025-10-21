@@ -24,16 +24,19 @@ MAX_THREADS = 5  # adjust to stay under SerpApi rate limits
 api_lock = Lock()
 api_calls = 0
 MAX_API_CALLS = 250
+api_limit_reached = False  # flag to signal all threads when limit is hit
 
 # === GLOBAL RATE LIMIT CONTROL ===
 last_call_time = 0
 MIN_INTERVAL = 1.2  # seconds between API calls globally to avoid burst rate issues
 
 def safe_api_request(params, company):
-    global api_calls, last_call_time
+    global api_calls, last_call_time, api_limit_reached
     with api_lock:
         if api_calls >= MAX_API_CALLS:
-            print(f"[{company}] API limit reached — skipping further requests.")
+            if not api_limit_reached:
+                api_limit_reached = True
+                print(f"\n⚠️ API LIMIT REACHED ({MAX_API_CALLS} calls) — All threads will stop processing.\n")
             return None
         
         # enforce global rate spacing
@@ -44,7 +47,7 @@ def safe_api_request(params, company):
         last_call_time = time.time()
         
         api_calls += 1
-        print(f"API call #{api_calls + 1} → {company}")
+        print(f"API call #{api_calls} → {company}")
     return requests.get("https://serpapi.com/search.json", params=params)
 
 
@@ -119,10 +122,21 @@ def build_trade_query(company_name, keywords, max_length=MAX_QUERY_LENGTH):
 
 def fetch_jobs_for_company(company):
     """Queries SerpApi for job results and returns filtered skilled-trade listings."""
+    global api_limit_reached
+
+    # Early exit if API limit already reached by another thread
+    if api_limit_reached:
+        print(f"[{company}] Skipping — API limit already reached.")
+        return []
+
     local_results = []
     query = build_trade_query(company, SKILLED_TRADES_KEYWORDS)
 
     for start in range(0, 30, 10):  # up to 3 pages
+        # Check if limit was reached during pagination
+        if api_limit_reached:
+            print(f"[{company}] Stopping pagination — API limit reached.")
+            break
         params = {
             "engine": "google_jobs",
             "q": query,
@@ -131,9 +145,13 @@ def fetch_jobs_for_company(company):
             "start": start
         }
 
+        response = None
         for attempt in range(3):  # retry logic
             try:
                 response = safe_api_request(params, company)
+                if response is None:
+                    # API limit reached, return collected results so far
+                    return local_results
                 if response.status_code == 200:
                     break
                 time.sleep(3)
@@ -141,8 +159,9 @@ def fetch_jobs_for_company(company):
                 print(f"[{company}] Connection error, retrying... {e}")
                 time.sleep(3)
 
-        if not response.ok:
-            print(f"[{company}] Skipped (HTTP {response.status_code})")
+        if response is None or not response.ok:
+            if response:
+                print(f"[{company}] Skipped (HTTP {response.status_code})")
             continue
 
         data = response.json()
@@ -195,10 +214,16 @@ with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
 
 
 # === STEP 3: Final Export ===
+print(f"\n{'='*60}")
+print(f"API Usage: {api_calls}/{MAX_API_CALLS} calls used")
+if api_limit_reached:
+    print(f"⚠️ API limit reached — some companies may not have been processed")
+print(f"{'='*60}\n")
+
 if results:
     final_df = pd.DataFrame(results).drop_duplicates(subset=["Company", "Job Title", "Source URL"])
     final_df.to_excel(OUTPUT_FILE, index=False)
-    print(f"\n✅ Completed! {len(final_df)} skilled-trade jobs saved to {OUTPUT_FILE}")
+    print(f"✅ Completed! {len(final_df)} skilled-trade jobs saved to {OUTPUT_FILE}")
 else:
-    print("\n⚠️ No skilled-trade jobs found. Try adjusting keywords or company list.")
+    print("⚠️ No skilled-trade jobs found. Try adjusting keywords or company list.")
 
