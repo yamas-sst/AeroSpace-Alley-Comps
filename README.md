@@ -39,14 +39,10 @@ This tool streamlines the process of finding skilled trades positions across mul
   - Description snippet
   - Timestamp
 
-- **Built-in Analytics** (NEW!):
-  - Automatic insights generation after scraping
-  - Identifies top in-demand trades
-  - Ranks companies by hiring activity
-  - Geographic distribution analysis
-  - Job board effectiveness metrics
-  - Trade-by-company cross-tabulation
-  - Multi-sheet Excel analytics report
+- **Built-in Analytics**: Automatically generates insights after scraping
+  - Top in-demand trades and hiring companies
+  - Geographic distribution and job board analysis
+  - Multi-sheet Excel report with summary statistics
 
 ## Requirements
 
@@ -100,62 +96,26 @@ python AeroComps.py
    - Checkpoint saves
 
 4. Results saved to `Aerospace_Alley_SkilledTrades_Jobs.xlsx`
-
 5. Analytics report automatically generated: `Aerospace_Alley_SkilledTrades_Jobs_Analytics.xlsx`
 
-### Analytics Features
+### What the Analytics Report Includes
 
-The scanner now includes **automatic analytics generation** after scraping completes. The analytics report provides:
+The analytics module automatically generates a multi-sheet Excel report with:
+- **Top Trades**: Most in-demand positions (Machinist, Welder, Inspector, etc.) with job counts
+- **Top Companies**: Companies ranked by hiring activity and market share
+- **Geographic Distribution**: Job hotspots by city/state
+- **Job Board Analysis**: Which platforms have the most listings (Indeed, LinkedIn, etc.)
+- **Trade-by-Company Matrix**: Cross-tabulation showing hiring patterns per company
+- **Summary Statistics**: Total jobs, unique companies, date range, and key metrics
 
-#### 📊 Top In-Demand Trades
-Identifies which skilled trades have the most job openings:
-- Machinist, Welder, Inspector, Assembler rankings
-- Job count and percentage of total market
-- Helps job seekers prioritize skill development
+Run analytics standalone on existing data: `python analytics.py input.xlsx output.xlsx`
 
-#### 🏢 Top Hiring Companies
-Ranks companies by hiring activity:
-- Which aerospace companies are hiring most aggressively
-- Market share per company
-- Strategic targeting for job applications
+### Advanced: Salary Extraction
 
-#### 📍 Geographic Distribution
-Analyzes job locations:
-- Top cities and states for opportunities
-- Identifies aerospace manufacturing hubs
-- Helps with relocation decisions
-
-#### 🔗 Job Board Analysis
-Shows which platforms have most listings:
-- Indeed, LinkedIn, ZipRecruiter rankings
-- Optimize job search strategy
-- Focus efforts on most effective boards
-
-#### 📈 Trade-by-Company Matrix
-Cross-tabulation of trades and companies:
-- Which trades each company needs most
-- Company-specific hiring patterns
-- Identify best fit opportunities
-
-**To use analytics standalone:**
-```bash
-# Analyze existing job data
-python analytics.py Aerospace_Alley_SkilledTrades_Jobs.xlsx
-
-# Custom output filename
-python analytics.py input.xlsx custom_analytics.xlsx
-```
-
-**See [ANALYTICS_README.md](ANALYTICS_README.md) for detailed documentation.**
-
-### Salary Extraction (Pseudo Code Available)
-
-A comprehensive salary extraction implementation is provided in `salary_extraction_pseudocode.py`:
-- Extracts salary ranges from job descriptions
-- Handles multiple formats ($50K, $25/hr, etc.)
-- Normalizes to annual salary
-- Confidence scoring
-- Ready to integrate for salary analytics
+A salary extraction framework is included in `salary_extraction_pseudocode.py` for future integration:
+- Parses multiple formats: $50K-70K, $25-35/hr, ranges and exact amounts
+- Normalizes to annual salary with confidence scoring
+- Ready to integrate for compensation analysis by trade
 
 ### Configuration Options
 
@@ -248,106 +208,29 @@ The generated Excel file contains:
 - Reduce `MAX_THREADS` to 3 or fewer
 - Wait and retry later
 
-## Expansion Opportunities
+## Future Expansion Opportunities
 
-This codebase has significant potential for expansion into a comprehensive job intelligence platform:
+This codebase can be extended into a comprehensive job intelligence platform with:
 
-### 1. Multi-Industry Support
-Extend beyond aerospace to:
-- General Manufacturing
-- Automotive
-- Defense Contractors
-- Maritime/Shipbuilding
-- Heavy Equipment
-- Renewable Energy
+**Data & Intelligence**
+- Multi-industry support (automotive, defense, manufacturing, maritime)
+- Database integration (PostgreSQL/SQLite) for historical tracking
+- Time-series trend analysis and demand forecasting
+- Salary benchmarking and competitive intelligence
+- Multiple data source integration (LinkedIn, Indeed, Glassdoor APIs)
 
-### 2. Advanced Analytics & Visualization
-- **Trend Analysis**: Track hiring patterns over time
-- **Salary Intelligence**: Extract and benchmark compensation data
-- **Geographic Analysis**: Heat maps of job concentrations
-- **Skills Gap Analysis**: Identify most in-demand skills
-- **Demand Forecasting**: Predict hiring trends
+**User Features**
+- Real-time notifications (email, SMS, Slack/Teams)
+- Web dashboard with interactive visualizations
+- Job matching with resume parsing and NLP skill extraction
+- Job application CRM for tracking interviews and offers
+- Mobile apps with location-based alerts
 
-### 3. Database Integration
-Replace Excel with PostgreSQL/SQLite:
-- Historical job tracking
-- Change detection (new jobs vs. filled positions)
-- Better deduplication across runs
-- Complex querying capabilities
-- Data versioning
-
-### 4. Real-time Notifications
-- Email alerts for new matching jobs
-- SMS notifications
-- Slack/Teams integration
-- Custom filtering per user
-- Daily/weekly digest reports
-
-### 5. Web Dashboard
-- Interactive React/Vue.js frontend
-- Real-time job search and filtering
-- Visual analytics (charts, graphs, maps)
-- User authentication
-- Saved searches and preferences
-- Job application tracking
-
-### 6. Enhanced Job Matching
-- Resume/CV parsing and matching
-- NLP-based skill extraction from descriptions
-- Experience level classification
-- Certification requirement tracking
-- Compatibility scoring
-
-### 7. Competitive Intelligence
-- Company hiring velocity comparison
-- Market share analysis
-- Salary benchmarking across competitors
-- Workforce trend analysis
-- Talent acquisition insights
-
-### 8. Multiple Data Sources
-Integrate additional APIs:
-- LinkedIn Jobs API
-- Indeed API
-- Glassdoor
-- ZipRecruiter
-- Company career pages (web scraping)
-- Government job sites (USAJobs)
-
-### 9. Job Application CRM
-- Track applications per job
-- Interview scheduling
-- Follow-up reminders
-- Offer comparison
-- Acceptance tracking
-
-### 10. Cloud Deployment & Automation
-- Deploy to AWS/GCP/Azure
-- Scheduled daily/weekly scans
-- Serverless architecture (Lambda)
-- Auto-scaling based on demand
-- API endpoint for third-party integration
-
-### 11. Machine Learning Enhancements
-- Job description quality scoring
-- Duplicate detection improvements
-- Auto-categorization of job types
-- Salary prediction models
-- Company hiring pattern recognition
-
-### 12. Export & Integration Options
-- REST API for external tools
-- CSV, JSON, XML exports
-- ATS (Applicant Tracking System) integration
-- CRM integration (Salesforce, HubSpot)
-- Webhooks for real-time updates
-
-### 13. Mobile Application
-- iOS/Android apps
-- Push notifications
-- Location-based job alerts
-- Easy apply features
-- Offline mode
+**Enterprise & Integration**
+- Cloud deployment with scheduled scans (AWS/GCP/Azure)
+- REST API for third-party integration
+- ATS and CRM integrations (Salesforce, HubSpot)
+- Machine learning for job categorization and salary prediction
 
 ## Contributing
 
@@ -379,7 +262,14 @@ For issues, questions, or feature requests:
 
 ## Changelog
 
-### v1.0.0 (Current)
+### v1.1.0 (Current)
+- Added automatic analytics generation
+- Top trades, companies, locations, and job board analysis
+- Multi-sheet Excel analytics report
+- Salary extraction framework (pseudo code)
+- Comprehensive inline code documentation
+
+### v1.0.0
 - Initial release
 - Multi-threaded company processing
 - 100+ skilled trades keywords
