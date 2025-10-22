@@ -39,6 +39,15 @@ This tool streamlines the process of finding skilled trades positions across mul
   - Description snippet
   - Timestamp
 
+- **Built-in Analytics** (NEW!):
+  - Automatic insights generation after scraping
+  - Identifies top in-demand trades
+  - Ranks companies by hiring activity
+  - Geographic distribution analysis
+  - Job board effectiveness metrics
+  - Trade-by-company cross-tabulation
+  - Multi-sheet Excel analytics report
+
 ## Requirements
 
 ### Python Version
@@ -91,6 +100,62 @@ python AeroComps.py
    - Checkpoint saves
 
 4. Results saved to `Aerospace_Alley_SkilledTrades_Jobs.xlsx`
+
+5. Analytics report automatically generated: `Aerospace_Alley_SkilledTrades_Jobs_Analytics.xlsx`
+
+### Analytics Features
+
+The scanner now includes **automatic analytics generation** after scraping completes. The analytics report provides:
+
+#### 📊 Top In-Demand Trades
+Identifies which skilled trades have the most job openings:
+- Machinist, Welder, Inspector, Assembler rankings
+- Job count and percentage of total market
+- Helps job seekers prioritize skill development
+
+#### 🏢 Top Hiring Companies
+Ranks companies by hiring activity:
+- Which aerospace companies are hiring most aggressively
+- Market share per company
+- Strategic targeting for job applications
+
+#### 📍 Geographic Distribution
+Analyzes job locations:
+- Top cities and states for opportunities
+- Identifies aerospace manufacturing hubs
+- Helps with relocation decisions
+
+#### 🔗 Job Board Analysis
+Shows which platforms have most listings:
+- Indeed, LinkedIn, ZipRecruiter rankings
+- Optimize job search strategy
+- Focus efforts on most effective boards
+
+#### 📈 Trade-by-Company Matrix
+Cross-tabulation of trades and companies:
+- Which trades each company needs most
+- Company-specific hiring patterns
+- Identify best fit opportunities
+
+**To use analytics standalone:**
+```bash
+# Analyze existing job data
+python analytics.py Aerospace_Alley_SkilledTrades_Jobs.xlsx
+
+# Custom output filename
+python analytics.py input.xlsx custom_analytics.xlsx
+```
+
+**See [ANALYTICS_README.md](ANALYTICS_README.md) for detailed documentation.**
+
+### Salary Extraction (Pseudo Code Available)
+
+A comprehensive salary extraction implementation is provided in `salary_extraction_pseudocode.py`:
+- Extracts salary ranges from job descriptions
+- Handles multiple formats ($50K, $25/hr, etc.)
+- Normalizes to annual salary
+- Confidence scoring
+- Ready to integrate for salary analytics
 
 ### Configuration Options
 

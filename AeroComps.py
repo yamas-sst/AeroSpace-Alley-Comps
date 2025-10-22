@@ -433,6 +433,25 @@ if results:
 
     # Success message with job count
     print(f"✅ Completed! {len(final_df)} skilled-trade jobs saved to {OUTPUT_FILE}")
+
+    # ======================================================
+    # ANALYTICS: Generate Insights Report
+    # ======================================================
+    # Automatically generate analytics report if we have results
+    try:
+        from analytics import JobAnalytics
+
+        analytics_output = OUTPUT_FILE.replace(".xlsx", "_Analytics.xlsx")
+        analytics = JobAnalytics(final_df)
+        analytics.generate_report(analytics_output)
+
+    except ImportError:
+        print("\n⚠️ Analytics module not found. Skipping analytics generation.")
+        print("   To enable analytics, ensure 'analytics.py' is in the same directory.")
+    except Exception as e:
+        print(f"\n⚠️ Error generating analytics: {e}")
+        print("   Job data has been saved, but analytics report was not generated.")
+
 else:
     # No jobs found across all companies
     print("⚠️ No skilled-trade jobs found. Try adjusting keywords or company list.")
