@@ -1,0 +1,49 @@
+{
+  "_comment": "=== AEROSPACE ALLEY JOB SCANNER CONFIGURATION TEMPLATE ===",
+  "_comment_instructions": "1. Copy this file to 'config.json' | 2. Add your API keys | 3. Adjust settings as needed",
+
+  "api_keys": [
+    {
+      "label": "primary",
+      "key": "YOUR_SERPAPI_KEY_HERE",
+      "limit": 250,
+      "priority": 1,
+      "notes": "Get your API key from https://serpapi.com/"
+    },
+    {
+      "label": "secondary",
+      "key": "YOUR_SECOND_API_KEY_HERE",
+      "limit": 250,
+      "priority": 2,
+      "notes": "Optional: Add more API keys for processing 100+ companies"
+    }
+  ],
+
+  "settings": {
+    "_comment": "=== TESTING MODE ===",
+    "testing_mode": false,
+    "testing_company_limit": 1,
+    "_testing_info": "Set testing_mode=true to process only 1 company for testing",
+
+    "_comment_files": "=== FILE PATHS ===",
+    "input_file": "data/Aerospace_Alley_Companies.xlsx",
+    "output_file": "output/Aerospace_Alley_SkilledTrades_Jobs.xlsx",
+    "state_file": "output/state.json",
+
+    "_comment_api": "=== API SETTINGS ===",
+    "max_api_calls_per_key": 250,
+    "min_interval_seconds": 1.2,
+    "retry_attempts": 3,
+    "retry_delay_seconds": 3,
+
+    "_comment_performance": "=== PERFORMANCE TUNING ===",
+    "max_threads": 5,
+    "checkpoint_interval": 25,
+    "max_query_length": 200,
+
+    "_comment_resume": "=== RESUME CAPABILITY ===",
+    "auto_resume": true,
+    "skip_completed_companies": true,
+    "_resume_info": "Set auto_resume=true to continue from last run automatically"
+  }
+}

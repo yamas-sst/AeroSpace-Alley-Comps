@@ -41,3 +41,16 @@ Thumbs.db
 # Excel temp files
 ~$*.xlsx
 ~$*.xls
+
+# Configuration with secrets (DO NOT COMMIT)
+config.json
+
+# Output directory (results, state, analytics)
+output/
+*.xlsx
+!data/*.xlsx
+!config.example.json
+
+# State tracking files
+state.json
+progress.json
