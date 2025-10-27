@@ -5,13 +5,14 @@
 #          using Google Jobs API via SerpApi, then export results to Excel
 #
 # WORKFLOW:
-#   1. Load list of aerospace companies from Excel
-#   2. For each company, build optimized search queries with trade keywords
-#   3. Query Google Jobs API (up to 3 pages per company)
-#   4. Filter results to only skilled trades positions
-#   5. Export to Excel with deduplication and checkpoints
+#   1. Load configuration from config.json (API keys, settings, file paths)
+#   2. Load list of aerospace companies from Excel
+#   3. For each company, build optimized search queries with trade keywords
+#   4. Query Google Jobs API (up to 3 pages per company)
+#   5. Filter results to only skilled trades positions
+#   6. Export to Excel with deduplication and checkpoints
 #
-# Optimized for: Anaconda + VS Code Environment
+# CONFIGURATION: Edit config.json to change settings, API keys, testing mode
 # Dependencies: pip install pandas openpyxl requests tqdm
 # ======================================================
 
@@ -20,27 +21,93 @@ import requests
 import time
 import re
 import difflib
+import json
+import os
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
 # ======================================================
-# CONFIGURATION CONSTANTS
+# CONFIGURATION LOADER
 # ======================================================
-# These settings control API usage, file paths, and performance tuning
+def load_config(config_file="config.json"):
+    """
+    Load configuration from JSON file.
 
-# API Authentication
-API_KEY = "4aa81d243250039b571ae3b331214224e0f253369166f54273fa553355c9eaf7"  # SerpApi key for Google Jobs API access
+    PARAMETERS:
+        config_file (str): Path to configuration file (default: config.json)
 
-# File Paths
-INPUT_FILE = r"C:\Users\JoseYamas\Desktop\SST Core Projects\Zac\AeroSpace Alley Comps\Aerospace_Alley_Companies.xlsx"  # Excel file with "Company Name" column
-OUTPUT_FILE = "Aerospace_Alley_SkilledTrades_Jobs.xlsx"  # Where to save job results
+    RETURNS:
+        dict: Configuration dictionary with API keys and settings
+
+    RAISES:
+        FileNotFoundError: If config.json doesn't exist
+        json.JSONDecodeError: If config.json has invalid JSON
+    """
+    if not os.path.exists(config_file):
+        print(f"\n❌ ERROR: {config_file} not found!")
+        print(f"   Please create {config_file} with your API keys and settings.")
+        print(f"   See README.md for configuration instructions.\n")
+        raise FileNotFoundError(f"Configuration file {config_file} not found")
+
+    with open(config_file, 'r') as f:
+        config = json.load(f)
+
+    # Validate required fields
+    if "api_keys" not in config or len(config["api_keys"]) == 0:
+        raise ValueError("config.json must contain at least one API key in 'api_keys' array")
+    if "settings" not in config:
+        raise ValueError("config.json must contain 'settings' object")
+
+    return config
+
+
+# ======================================================
+# LOAD CONFIGURATION
+# ======================================================
+print("\n" + "="*70)
+print("AEROSPACE ALLEY JOB SCANNER - Configuration Loading")
+print("="*70)
+
+try:
+    CONFIG = load_config()
+    print(f"✅ Configuration loaded successfully from config.json")
+    print(f"   API Keys found: {len(CONFIG['api_keys'])}")
+    for i, key_info in enumerate(CONFIG['api_keys'], 1):
+        print(f"   - {key_info['label']}: {key_info['key'][:20]}...{key_info['key'][-10:]} (limit: {key_info.get('limit', 250)})")
+
+    # Testing mode indicator
+    if CONFIG['settings'].get('testing_mode', False):
+        print(f"\n🧪 TESTING MODE ENABLED: Will process only {CONFIG['settings'].get('testing_company_limit', 1)} companies")
+    else:
+        print(f"\n🚀 PRODUCTION MODE: Will process all companies")
+
+    print("="*70 + "\n")
+except Exception as e:
+    print(f"\n❌ ERROR loading configuration: {e}\n")
+    exit(1)
+
+
+# ======================================================
+# CONFIGURATION CONSTANTS (Loaded from config.json)
+# ======================================================
+# API Authentication - Use primary API key by default
+API_KEY = CONFIG['api_keys'][0]['key']  # Primary API key
+API_KEY_LABEL = CONFIG['api_keys'][0]['label']  # Label for logging
+
+# File Paths (from config)
+INPUT_FILE = CONFIG['settings']['input_file']
+OUTPUT_FILE = CONFIG['settings']['output_file']
 
 # Query Optimization
-MAX_QUERY_LENGTH = 200  # Google Jobs has ~200 character limit for search queries
+MAX_QUERY_LENGTH = CONFIG['settings'].get('max_query_length', 200)
 
 # Performance Tuning
-MAX_THREADS = 5  # Number of companies to process in parallel (balance speed vs. rate limits)
+MAX_THREADS = CONFIG['settings'].get('max_threads', 5)
+
+# Testing Mode
+TESTING_MODE = CONFIG['settings'].get('testing_mode', False)
+TESTING_COMPANY_LIMIT = CONFIG['settings'].get('testing_company_limit', 1)
 
 
 # ======================================================
@@ -51,12 +118,12 @@ MAX_THREADS = 5  # Number of companies to process in parallel (balance speed vs.
 
 api_lock = Lock()  # Ensures only one thread accesses API counter at a time
 api_calls = 0  # Tracks total API calls made during this run
-MAX_API_CALLS = 250  # Stop processing after this many calls (stay under SerpApi monthly limit)
+MAX_API_CALLS = CONFIG['settings'].get('max_api_calls_per_key', 250)  # API call limit per key
 api_limit_reached = False  # Global flag: when True, all threads stop making requests
 
 # Rate Limiting: Prevent burst requests that trigger 429 errors
 last_call_time = 0  # Timestamp of most recent API call
-MIN_INTERVAL = 1.2  # Minimum seconds between API calls (prevents rate limit violations)
+MIN_INTERVAL = CONFIG['settings'].get('min_interval_seconds', 1.2)  # Minimum seconds between API calls
 
 # ======================================================
 # FUNCTION: safe_api_request()
@@ -98,7 +165,7 @@ def safe_api_request(params, company):
 
         # Increment counter and log progress
         api_calls += 1
-        print(f"API call #{api_calls} → {company}")
+        print(f"API call #{api_calls} ({API_KEY_LABEL}) → {company}")
 
     # Make the actual API request (outside the lock to allow other threads to proceed)
     return requests.get("https://serpapi.com/search.json", params=params)
@@ -189,9 +256,22 @@ SKILLED_TRADES_KEYWORDS = [
 #   - df: Full DataFrame (kept for potential future use)
 #   - companies: Array of unique company names (duplicates removed)
 #   - results: Empty list to store job listings (populated during processing)
+#
+# TESTING MODE: If enabled, only process limited number of companies
 
+print(f"Loading company list from: {INPUT_FILE}")
 df = pd.read_excel(INPUT_FILE)
 companies = df["Company Name"].dropna().unique()  # Remove NaN values and duplicates
+
+# Apply testing mode filter if enabled
+total_companies = len(companies)
+if TESTING_MODE:
+    companies = companies[:TESTING_COMPANY_LIMIT]
+    print(f"🧪 TESTING MODE: Processing {len(companies)} of {total_companies} companies")
+    print(f"   Companies to test: {', '.join(companies)}")
+else:
+    print(f"📊 Loaded {total_companies} companies to process")
+
 results = []  # Will store all job listings across all companies
 
 
@@ -419,7 +499,7 @@ with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
 #   - No index column (index=False)
 
 print(f"\n{'='*60}")
-print(f"API Usage: {api_calls}/{MAX_API_CALLS} calls used")
+print(f"API Usage: {api_calls}/{MAX_API_CALLS} calls used ({API_KEY_LABEL})")
 if api_limit_reached:
     print(f"⚠️ API limit reached — some companies may not have been processed")
 print(f"{'='*60}\n")
@@ -427,6 +507,12 @@ print(f"{'='*60}\n")
 if results:
     # Create DataFrame and remove duplicates
     final_df = pd.DataFrame(results).drop_duplicates(subset=["Company", "Job Title", "Source URL"])
+
+    # Ensure output directory exists
+    output_dir = os.path.dirname(OUTPUT_FILE)
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print(f"📁 Created output directory: {output_dir}")
 
     # Save to Excel
     final_df.to_excel(OUTPUT_FILE, index=False)

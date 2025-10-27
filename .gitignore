@@ -49,7 +49,6 @@ config.json
 output/
 *.xlsx
 !data/*.xlsx
-!config.example.json
 
 # State tracking files
 state.json
