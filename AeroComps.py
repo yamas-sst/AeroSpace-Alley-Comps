@@ -302,23 +302,37 @@ results = []  # Will store all job listings across all companies
 # RETURNS:
 #   str: Optimized search query string
 
-def build_trade_query(company_name, keywords, max_length=MAX_QUERY_LENGTH):
-    """Builds job search query ensuring length limit compliance."""
+def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH):
+    """
+    Builds job search query for Google Jobs API.
+
+    SIMPLIFIED APPROACH (FIXED):
+    - Uses company name ONLY (no complex OR logic)
+    - Lets Google Jobs find ALL jobs at the company
+    - Post-filtering handles skilled trades selection
+
+    RATIONALE:
+    - Complex OR queries ("Company keyword1 OR keyword2") cause Google to search
+      for keyword1/keyword2 ANYWHERE, not just at the target company
+    - Simple company name query returns company-specific results
+    - More reliable and better results
+
+    PARAMETERS:
+        company_name (str): Company name to search
+        keywords (list): IGNORED - kept for backward compatibility
+        max_length (int): IGNORED - kept for backward compatibility
+
+    RETURNS:
+        str: Simple company name query
+    """
     # Remove special characters that could interfere with search
     # Keep alphanumeric, ampersands (&), and spaces
     clean_name = re.sub(r"[^a-zA-Z0-9&\s]", "", company_name).strip()
 
-    # Build query by adding keywords until we hit the length limit
-    query_parts = []
-    for kw in keywords:
-        # Test if adding this keyword would exceed the limit
-        tentative = f"{clean_name} {' OR '.join(query_parts + [kw])}"
-        if len(tentative) > max_length:
-            break  # Stop adding keywords
-        query_parts.append(kw)
-
-    # Return final query: "Company keyword1 OR keyword2 OR keyword3..."
-    return f"{clean_name} " + " OR ".join(query_parts)
+    # SIMPLE: Just return company name
+    # Google Jobs will find all positions at this company
+    # We filter for skilled trades in post-processing
+    return clean_name
 
 
 # ======================================================
