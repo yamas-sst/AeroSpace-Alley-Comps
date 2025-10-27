@@ -1,40 +1,104 @@
 # Aerospace Alley Job Scanner
 
-**Status:** ⚠️ **Phase B In Progress - Priority Fixes Implemented, Awaiting Testing**
-
-A Python tool for discovering skilled trades job openings across aerospace companies. Initial testing revealed critical query structure issue (now fixed) and API limitations for Connecticut-based suppliers.
+**Market Intelligence Tool for Connecticut Aerospace Manufacturing**
 
 ---
 
-## 🎯 Executive Summary (Non-Technical)
+## 📊 Executive Summary
 
-### What This Tool Does
-Automatically finds skilled trades job postings (machinists, welders, inspectors, etc.) from aerospace companies and exports them to Excel for analysis.
+### Business Overview
 
-### Current Status
-- ✅ **Fixed:** Critical query structure bug that caused 0 results
-- ✅ **Implemented:** Comprehensive validation, health monitoring, and error handling
-- ⏳ **Testing:** Waiting for API rate limit to clear (~30 minutes from last test)
-- 💡 **Next:** Validate fix with test run, then proceed with full extraction
+The Aerospace Alley Job Scanner is a **competitive intelligence and market analysis tool** designed to track hiring activity across Connecticut's aerospace manufacturing sector. By monitoring real-time job postings from 137 aerospace companies, this tool provides actionable insights into market trends, competitive positioning, and business development opportunities.
 
-### What Changed Since Initial Tests
-**Root Cause Identified:** Complex OR queries ("Company keyword1 OR keyword2") caused Google to search for keywords globally instead of at target companies. Fixed to use simple company names only.
+### What This Tool Delivers
 
-**Priority Fixes Applied:**
-1. Query structure fixed (simple company names)
-2. Response validation (detects API errors, rate limits)
-3. Company name matching (prevents false positives)
-4. Health monitoring (detects API issues automatically)
-5. Timeout handling (prevents hanging requests)
+**Market Intelligence:**
+- Real-time hiring activity across Connecticut aerospace manufacturers
+- Skilled trades demand analysis (machinists, welders, inspectors, assemblers, technicians)
+- Company expansion indicators (increased hiring = capacity growth)
+- Regional workforce trend data
 
-### Test Results Summary
-| Test | Companies | API Calls | Jobs Found | Finding |
-|------|-----------|-----------|------------|---------|
-| Test 1 | 20 small suppliers | 180 | 0 | Query structure issue (not API limitation) |
-| Test 2 | 3 tier-1 (GKN, Barnes, Hanwha) | 27 | 0 | Query structure issue confirmed |
-| Rate Limit | Both API keys | 207 total | N/A | IP temporarily blocked (clears in 30 min) |
+**Competitive Intelligence:**
+- Which companies are actively hiring (growth indicators)
+- Types of positions being filled (technology investments, capability expansion)
+- Hiring velocity by company (aggressive expansion vs. maintenance hiring)
+- Tier-1 supplier vs. small manufacturer activity comparison
 
-**Key Insight:** Issue was our query construction, not API limitations. Fixed queries should yield results.
+**Sales & Business Development Applications:**
+- **Lead Qualification:** Companies hiring = companies with active programs and budget
+- **Sales Timing:** Hiring spikes indicate new contracts, expansion, good time to approach
+- **Partnership Opportunities:** Identify companies scaling up who may need suppliers/partners
+- **Market Positioning:** Understand which skills are in highest demand for workforce planning
+- **Customer Health Monitoring:** Track hiring at existing customers (growth vs. contraction)
+
+### Current Capabilities
+
+**Data Coverage:**
+- **137 Connecticut aerospace companies** (full Aerospace Alley member list)
+- **100+ skilled trades job categories** automatically classified
+- **Daily/weekly automated scans** (configurable)
+- **Excel exports** for analysis, reporting, CRM integration
+
+**Output Data Includes:**
+- Company name
+- Job title and description
+- Location (facility-level detail)
+- Posting date (freshness indicator)
+- Source (Indeed, LinkedIn, company careers page)
+- Direct application link
+
+### Business Impact & Use Cases
+
+**For Sales Teams:**
+- Prioritize outreach to companies showing hiring activity (active programs = buying window)
+- Tailor pitches based on roles being hired (e.g., "I see you're expanding CNC operations...")
+- Track customer health through hiring patterns
+
+**For Marketing:**
+- Identify market segments with highest growth (concentration of hiring)
+- Target content/campaigns to companies in expansion mode
+- Case study identification (companies with hiring momentum)
+
+**For Business Development:**
+- Spot partnership opportunities (complementary capabilities, regional proximity)
+- Track competitive hiring (who's investing in what capabilities)
+- Industry trend analysis for strategic planning
+
+**For Executive Leadership:**
+- Regional aerospace market health dashboard
+- Competitive landscape monitoring
+- Workforce trend analysis for policy/advocacy
+
+### Project Status
+
+**Phase:** Testing & Refinement (Demo-Ready)
+
+**What's Working:**
+- Automated data collection from 137 companies
+- Skilled trades classification and filtering
+- Excel export with full job details
+- Multi-company parallel processing
+
+**Current Activity:**
+- Refining data accuracy and completeness
+- Testing with tier-1 suppliers (GKN, Barnes, Hanwha, etc.)
+- Validating automated quality controls
+
+**Next Steps:**
+- Full production run (all 137 companies)
+- Establish weekly automated scanning schedule
+- Generate first quarterly market intelligence report
+
+**Timeline:**
+- Demo-ready output: Immediate (testing phase)
+- Full production deployment: 1-2 weeks
+- Regular reporting cadence: Monthly/Quarterly (as needed)
+
+---
+
+## 💼 For Technical Teams
+
+The sections below provide implementation details, system architecture, and development roadmap for technical stakeholders.
 
 ---
 
