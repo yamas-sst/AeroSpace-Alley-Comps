@@ -41,12 +41,12 @@ Automatically finds skilled trades job postings (machinists, welders, inspectors
 ## 🚀 Quick Start
 
 ### For Non-Technical Users
-1. **Setup:** Edit `config.json` with your API keys and settings
+1. **Setup:** Edit `resources/config.json` with your API keys and settings
 2. **Run:** `python AeroComps.py`
 3. **Results:** Check `output/` folder for Excel files
 
 ### For Demo/Testing
-- **Testing Mode:** Set `"testing_mode": true` in config.json
+- **Testing Mode:** Set `"testing_mode": true` in resources/config.json
 - **Test 3 companies:** Already configured (GKN, Barnes, Hanwha)
 - **Test All 137:** Set `"testing_mode": false`
 
@@ -306,9 +306,10 @@ if should_fallback:
 ## 💻 Technical Details
 
 <details>
-<summary><b>Configuration (config.json)</b></summary>
+<summary><b>Configuration (resources/config.json)</b></summary>
 
 ### API Keys
+**Location:** `resources/config.json`
 ```json
 "api_keys": [
   {
@@ -356,16 +357,33 @@ if should_fallback:
 
 ```
 AeroSpace-Alley-Comps/
-├── config.json                 # Configuration (API keys, settings)
+├── .gitignore                  # Git exclusions
 ├── AeroComps.py                # Main pipeline (with Priority Fixes)
-├── analytics.py                # Analytics generation
-├── salary_extraction_pseudocode.py  # Salary parsing (Phase D)
-├── data/
+├── README.md                   # This file (consolidated docs)
+│
+├── data/                       # Input data folder
 │   ├── Aerospace_Alley_Companies.xlsx  # Full list (137 companies)
 │   └── Test_3_Companies.xlsx           # Test subset (3 companies)
+│
 ├── output/                     # Results folder (Excel files)
-└── README.md                   # This file (consolidated docs)
+│
+├── log/                        # Test run logs (excluded from git)
+│   ├── test_run.log
+│   └── tier1_test_run.log
+│
+└── resources/                  # Supporting files folder
+    ├── __init__.py             # Python package file
+    ├── config.json             # Configuration (API keys, settings)
+    ├── requirements.txt        # Python dependencies
+    ├── analytics.py            # Analytics generation
+    └── salary_extraction_pseudocode.py  # Salary parsing (Phase D)
 ```
+
+**Clean Main Structure:**
+Only 3 files in root directory:
+- `AeroComps.py` - Main pipeline script
+- `README.md` - Documentation
+- `.gitignore` - Git exclusions
 
 </details>
 
@@ -375,7 +393,7 @@ AeroSpace-Alley-Comps/
 ### Main Components
 
 **1. Configuration Loader (Lines 33-88)**
-- Loads config.json with API keys and settings
+- Loads resources/config.json with API keys and settings
 - Validates required fields
 - Supports multiple API keys with labels
 
@@ -423,12 +441,12 @@ AeroSpace-Alley-Comps/
 
 ### Install
 ```bash
-pip install -r requirements.txt
+pip install -r resources/requirements.txt
 ```
 
 ### API Setup
 1. Get SerpAPI key: https://serpapi.com/ (100 free searches for trial)
-2. Add to `config.json`
+2. Add to `resources/config.json`
 3. Run: `python AeroComps.py`
 
 </details>
@@ -522,7 +540,7 @@ pip install -r requirements.txt
 ## ⚠️ Important Notes
 
 ### Security
-- `config.json` is excluded from git (contains API keys)
+- `resources/config.json` is excluded from git (contains API keys)
 - Never commit API keys to repository
 - Use separate API accounts for testing vs production
 
@@ -553,11 +571,11 @@ pip install -r requirements.txt
 
 **Test 1: Single Company Validation (3 API calls)**
 ```bash
-# Edit config.json:
+# Edit resources/config.json:
 "testing_mode": true,
 "testing_company_limit": 1
 
-# Edit Test_3_Companies.xlsx to include only GKN Aerospace
+# Edit data/Test_3_Companies.xlsx to include only GKN Aerospace
 python AeroComps.py
 ```
 
@@ -569,7 +587,7 @@ python AeroComps.py
 
 **Test 2: Three Company Validation (9 API calls)**
 ```bash
-# Edit config.json:
+# Edit resources/config.json:
 "testing_company_limit": 3
 
 # Run with GKN, Barnes, Hanwha
@@ -584,7 +602,7 @@ python AeroComps.py
 
 **Test 3: Full Production Run (411 API calls)**
 ```bash
-# Edit config.json:
+# Edit resources/config.json:
 "testing_mode": false
 
 python AeroComps.py
@@ -604,7 +622,7 @@ python AeroComps.py
 - Check health summary at end of run
 - Review `output/state.json` for progress
 - Verify API key validity (test at serpapi.com)
-- Check rate limits: `config.json` → `api_keys` → `limit`
+- Check rate limits: `resources/config.json` → `api_keys` → `limit`
 
 **Strategy Questions:**
 - Review fallback strategies (Priority 1-4 above)
@@ -622,7 +640,7 @@ python AeroComps.py
 
 ### Run Full Extraction
 ```bash
-# 1. Edit config.json: "testing_mode": false
+# 1. Edit resources/config.json: "testing_mode": false
 # 2. Run pipeline
 python AeroComps.py
 
