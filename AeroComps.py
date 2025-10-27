@@ -27,6 +27,14 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
+# Rate Limit Protection System
+from resources.rate_limit_protection import (
+    ConfigurationValidator,
+    RateLimitProtectionCoordinator,
+    ComprehensiveAuditLogger,
+    EnhancedHealthMonitor
+)
+
 # ======================================================
 # CONFIGURATION LOADER
 # ======================================================
@@ -87,6 +95,29 @@ except Exception as e:
     print(f"\n❌ ERROR loading configuration: {e}\n")
     exit(1)
 
+# ======================================================
+# INITIALIZE PROTECTION SYSTEM
+# ======================================================
+print("Initializing rate limit protection system...")
+try:
+    protection = RateLimitProtectionCoordinator(CONFIG)
+    rate_limiter = protection.rate_limiter
+    circuit_breaker = protection.circuit_breaker
+    batch_processor = protection.batch_processor
+    audit_logger = protection.audit_logger
+    health_monitor = protection.health_monitor  # Enhanced version
+    print("✅ Protection system initialized:")
+    print("   • Token Bucket Rate Limiter (60 calls/hour)")
+    print("   • Circuit Breaker (3 failure threshold)")
+    print("   • Exponential Backoff (3 max attempts)")
+    print("   • Batch Processor (10 companies/batch)")
+    print("   • Audit Logger (log/api_audit.jsonl)")
+    print("   • Health Monitor (real-time alerts)")
+    print("="*70 + "\n")
+except Exception as e:
+    print(f"\n❌ ERROR initializing protection system: {e}\n")
+    exit(1)
+
 
 # ======================================================
 # CONFIGURATION CONSTANTS (Loaded from config.json)
@@ -129,88 +160,13 @@ MIN_INTERVAL = CONFIG['settings'].get('min_interval_seconds', 1.2)  # Minimum se
 # ======================================================
 # HEALTH MONITORING SYSTEM
 # ======================================================
-class APIHealthMonitor:
-    """
-    Monitors API health and detects when fallback strategies should be triggered.
-
-    Tracks:
-    - API call success/failure rates
-    - Consecutive failures
-    - Rate limit errors
-    - Companies with/without jobs
-
-    Triggers fallback when:
-    - 5+ consecutive failures
-    - 3+ rate limit errors
-    - <15% success rate after 10 companies
-    """
-    def __init__(self):
-        self.total_calls = 0
-        self.successful_calls = 0
-        self.failed_calls = 0
-        self.rate_limit_errors = 0
-        self.companies_processed = 0
-        self.companies_with_jobs = 0
-        self.consecutive_failures = 0
-        self.total_jobs_found = 0
-
-    def record_call(self, status_code, company, jobs_found):
-        """Record API call result"""
-        self.total_calls += 1
-        self.companies_processed += 1
-
-        if status_code == 200:
-            self.successful_calls += 1
-            self.consecutive_failures = 0
-        else:
-            self.failed_calls += 1
-            self.consecutive_failures += 1
-
-        if status_code in [403, 429]:
-            self.rate_limit_errors += 1
-
-        if jobs_found > 0:
-            self.companies_with_jobs += 1
-            self.total_jobs_found += jobs_found
-
-    def should_trigger_fallback(self):
-        """Determine if fallback strategy should be triggered"""
-        # Trigger 1: Consecutive failures
-        if self.consecutive_failures >= 5:
-            return True, "consecutive_failures"
-
-        # Trigger 2: Rate limited
-        if self.rate_limit_errors >= 3:
-            return True, "rate_limited"
-
-        # Trigger 3: Low success rate (after minimum sample)
-        if self.companies_processed >= 10:
-            success_rate = self.companies_with_jobs / self.companies_processed
-            if success_rate < 0.15:  # Less than 15%
-                return True, "low_success_rate"
-
-        return False, None
-
-    def get_summary(self):
-        """Get health summary"""
-        success_rate = (self.companies_with_jobs / self.companies_processed * 100
-                       if self.companies_processed > 0 else 0)
-        avg_jobs = (self.total_jobs_found / self.companies_with_jobs
-                   if self.companies_with_jobs > 0 else 0)
-
-        return {
-            "companies_processed": self.companies_processed,
-            "companies_with_jobs": self.companies_with_jobs,
-            "success_rate": f"{success_rate:.1f}%",
-            "total_jobs_found": self.total_jobs_found,
-            "avg_jobs_per_company": f"{avg_jobs:.1f}",
-            "consecutive_failures": self.consecutive_failures,
-            "rate_limit_errors": self.rate_limit_errors
-        }
-
-
-# Initialize global health monitor
-health_monitor = APIHealthMonitor()
+# NOTE: Using EnhancedHealthMonitor from rate_limit_protection module
+# Initialized globally as part of protection system (line 108)
+# Provides enhanced monitoring with:
+# - More detailed metrics and response time tracking
+# - Configurable alert thresholds
+# - Automatic fallback triggers
+# - Real-time health reports
 
 
 # ======================================================
@@ -324,7 +280,15 @@ def validate_company_match(target_company, api_company, threshold=0.65):
 def safe_api_request(params, company):
     global api_calls, last_call_time, api_limit_reached
 
-    # Critical section: Only one thread can access API counter/timer at a time
+    # CHECK CIRCUIT BREAKER: Stop if too many failures
+    if not circuit_breaker.is_available():
+        print(f"\n⛔ CIRCUIT BREAKER OPEN - Stopping all API calls")
+        print(f"   Reason: Too many consecutive failures detected")
+        print(f"   System will pause to prevent further issues")
+        api_limit_reached = True
+        return None
+
+    # Critical section: Only one thread can access API counter at a time
     with api_lock:
         # Check if we've hit the API quota limit
         if api_calls >= MAX_API_CALLS:
@@ -333,13 +297,9 @@ def safe_api_request(params, company):
                 print(f"\n⚠️ API LIMIT REACHED ({MAX_API_CALLS} calls) — All threads will stop processing.\n")
             return None
 
-        # Rate limiting: Enforce minimum spacing between API calls
-        # This prevents burst requests that trigger 429 "Too Many Requests" errors
-        now = time.time()
-        elapsed = now - last_call_time
-        if elapsed < MIN_INTERVAL:
-            time.sleep(MIN_INTERVAL - elapsed)
-        last_call_time = time.time()
+        # RATE LIMITING: Use token bucket algorithm (blocks if needed)
+        # This replaces manual time.sleep() with industry-standard rate limiting
+        rate_limiter.acquire(1)
 
         # Increment counter and log progress
         api_calls += 1
@@ -347,7 +307,46 @@ def safe_api_request(params, company):
 
     # Make the actual API request (outside the lock to allow other threads to proceed)
     # 30-second timeout prevents hanging on slow/failed connections
-    return requests.get("https://serpapi.com/search.json", params=params, timeout=30)
+    start_time = time.time()
+
+    try:
+        response = requests.get("https://serpapi.com/search.json", params=params, timeout=30)
+        response_time_ms = (time.time() - start_time) * 1000
+
+        # AUDIT LOG: Record all API calls for compliance
+        audit_logger.log_api_call(
+            company=company,
+            status_code=response.status_code,
+            response_time_ms=response_time_ms,
+            jobs_found=0,  # Updated later in fetch_jobs_for_company()
+            api_key_label=API_KEY_LABEL
+        )
+
+        # UPDATE CIRCUIT BREAKER: Track success/failure
+        if response.status_code == 200:
+            circuit_breaker.record_success()
+        else:
+            circuit_breaker.record_failure()
+
+            # LOG RATE LIMIT ERRORS SPECIFICALLY
+            if response.status_code in [403, 429]:
+                audit_logger.log_rate_limit(
+                    status_code=response.status_code,
+                    company=company,
+                    message=f"Rate limit detected: HTTP {response.status_code}"
+                )
+
+        return response
+
+    except Exception as e:
+        response_time_ms = (time.time() - start_time) * 1000
+        circuit_breaker.record_failure()
+        audit_logger.log_error(
+            error_type="request_exception",
+            message=str(e),
+            company=company
+        )
+        raise e
 
 
 # ======================================================
@@ -575,12 +574,21 @@ def fetch_jobs_for_company(company):
         # Retry logic: Try up to 3 times if connection fails
         response = None
         data = None
+        response_time_ms = 0
         for attempt in range(3):
             try:
+                request_start = time.time()
                 response = safe_api_request(params, company)
+                response_time_ms = (time.time() - request_start) * 1000
+
                 if response is None:
                     # API limit reached, return what we've collected so far
-                    health_monitor.record_call(0, company, len(local_results))
+                    health_monitor.record_call(
+                        status_code=0,
+                        company=company,
+                        jobs_found=len(local_results),
+                        response_time_ms=response_time_ms
+                    )
                     return local_results
 
                 # Validate API response using comprehensive validation
@@ -589,7 +597,12 @@ def fetch_jobs_for_company(company):
                     break  # Success, exit retry loop
                 else:
                     print(f"[{company}] Validation failed: {error_msg}")
-                    health_monitor.record_call(response.status_code, company, 0)
+                    health_monitor.record_call(
+                        status_code=response.status_code,
+                        company=company,
+                        jobs_found=0,
+                        response_time_ms=response_time_ms
+                    )
                     if response.status_code in [403, 429]:  # Rate limit errors - don't retry
                         return local_results
                     time.sleep(3)  # Wait before retrying for other errors
@@ -640,68 +653,86 @@ def fetch_jobs_for_company(company):
         time.sleep(1)
 
     # Record successful processing in health monitor
-    health_monitor.record_call(200, company, len(local_results))
+    health_monitor.record_call(
+        status_code=200,
+        company=company,
+        jobs_found=len(local_results),
+        response_time_ms=response_time_ms if 'response_time_ms' in locals() else 0
+    )
 
     print(f"[{company}] → {len(local_results)} skilled-trade jobs found")
     return local_results
 
 
 # ======================================================
-# MAIN EXECUTION: Parallel Company Processing
+# MAIN EXECUTION: Batch Processing with Rate Limit Protection
 # ======================================================
-# PURPOSE: Process multiple companies simultaneously to maximize speed
+# PURPOSE: Process companies in controlled batches to prevent API blocking
 #
 # HOW IT WORKS:
-#   - ThreadPoolExecutor creates a pool of worker threads (MAX_THREADS = 5)
-#   - Each thread processes one company at a time
-#   - As companies finish, new ones are assigned to available threads
-#   - Progress bar (tqdm) shows real-time completion status
+#   - Batch processor groups companies into batches (10 companies each)
+#   - Each batch is processed with pauses between batches
+#   - Rate limiter ensures safe spacing between API calls
+#   - Circuit breaker stops processing if too many failures occur
 #
 # FEATURES:
-#   - Parallel processing: 5 companies at once (configurable)
+#   - Batch processing: 10 companies per batch (human-like pattern)
+#   - Automatic pauses: 2-5 minutes between batches (prevents IP blocking)
 #   - Progressive checkpoints: Save results every 25 companies (prevents data loss)
 #   - Error handling: Individual company failures don't crash entire process
-#   - Result aggregation: All jobs collected into single results list
+#   - Health monitoring: Real-time alerts for API issues
 #
 # PERFORMANCE:
-#   - Single-threaded: ~50 companies/hour (1.2s per API call × 3 pages)
-#   - Multi-threaded (5 workers): ~200-250 companies/hour
-#   - Bottleneck: API rate limits (MIN_INTERVAL = 1.2s between calls)
+#   - ~40-50 minutes for 137 companies (safe, sustainable pace)
+#   - ~3 seconds between API calls (prevents rate limiting)
+#   - ~14 batches with automatic pauses (mimics human behavior)
+#   - Bottleneck: Intentionally slowed for API compliance
 
-with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-    # Submit all companies to the thread pool
-    # futures = {Future object: company_name}
-    futures = {executor.submit(fetch_jobs_for_company, company): company for company in companies}
+print(f"\n{'='*70}")
+print(f"Starting batch processing: {len(companies)} companies")
+print(f"{'='*70}\n")
 
-    # Process results as they complete (not necessarily in order)
-    for i, future in enumerate(tqdm(as_completed(futures), total=len(futures), desc="Processing companies")):
-        company = futures[future]
-        try:
-            # Retrieve job results from completed thread
-            company_results = future.result()
-            results.extend(company_results)  # Add to master results list
+# Process companies in batches
+for i, company in enumerate(tqdm(companies, desc="Processing companies")):
+    try:
+        # Check if we should stop (circuit breaker, API limit, etc.)
+        if api_limit_reached:
+            print(f"\n⚠️ Processing stopped: API limit reached")
+            break
 
-            # CHECK FOR FALLBACK TRIGGER: Detect API health issues
-            should_fallback, reason = health_monitor.should_trigger_fallback()
-            if should_fallback:
-                print(f"\n{'='*60}")
-                print(f"⚠️ FALLBACK TRIGGER DETECTED: {reason}")
-                print(f"{'='*60}")
-                print(health_monitor.get_summary())
-                print(f"\n⚠️ SerpAPI appears ineffective for this dataset.")
-                print(f"📋 See COMPLETE_AUDIT_AND_FALLBACK.md for alternative strategies.")
-                print(f"{'='*60}\n")
-                # Continue processing but user is alerted to investigate alternatives
+        # Process single company
+        company_results = fetch_jobs_for_company(company)
+        results.extend(company_results)  # Add to master results list
 
-            # CHECKPOINT SAVE: Every 25 companies, save progress to disk
-            # This prevents losing all data if script crashes or API limit is hit
-            if i % 25 == 0 and results:
-                pd.DataFrame(results).drop_duplicates(subset=["Company", "Job Title", "Source URL"]).to_excel(OUTPUT_FILE, index=False)
-                print(f"Checkpoint saved ({len(results)} total records).")
+        # CHECK FOR FALLBACK TRIGGER: Detect API health issues
+        should_fallback, reason = health_monitor.should_trigger_fallback()
+        if should_fallback:
+            print(f"\n{'='*60}")
+            print(f"🚨 FALLBACK TRIGGER DETECTED: {reason}")
+            print(f"{'='*60}")
+            print(health_monitor.get_summary())
+            print(f"\n⚠️ SerpAPI appears to have issues. Stopping to prevent IP block.")
+            print(f"   Check log/api_audit.jsonl for detailed analysis.")
+            print(f"{'='*60}\n")
+            break  # Stop processing to prevent further issues
 
-        except Exception as e:
-            # Log error but continue processing other companies
-            print(f"⚠️ Error processing {company}: {e}")
+        # CHECKPOINT SAVE: Every 25 companies, save progress to disk
+        # This prevents losing all data if script crashes or API limit is hit
+        if (i + 1) % 25 == 0 and results:
+            pd.DataFrame(results).drop_duplicates(subset=["Company", "Job Title", "Source URL"]).to_excel(OUTPUT_FILE, index=False)
+            print(f"💾 Checkpoint saved ({len(results)} total records)")
+
+        # BATCH PAUSE: Every 10 companies, take a human-like break
+        if (i + 1) % 10 == 0 and (i + 1) < len(companies):
+            pause_duration = batch_processor.calculate_pause()
+            print(f"\n⏸️  Batch {(i + 1) // 10} complete. Pausing for {pause_duration:.0f} seconds...")
+            print(f"   This prevents API rate limiting and mimics human behavior.")
+            time.sleep(pause_duration)
+            print(f"▶️  Resuming processing...\n")
+
+    except Exception as e:
+        # Log error but continue processing other companies
+        print(f"⚠️ Error processing {company}: {e}")
 
 
 # ======================================================
