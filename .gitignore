@@ -43,7 +43,7 @@ Thumbs.db
 ~$*.xls
 
 # Configuration with secrets (DO NOT COMMIT)
-config.json
+resources/config.json
 
 # Output directory (results, state, analytics)
 output/

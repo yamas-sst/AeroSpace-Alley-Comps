@@ -30,12 +30,12 @@ from threading import Lock
 # ======================================================
 # CONFIGURATION LOADER
 # ======================================================
-def load_config(config_file="config.json"):
+def load_config(config_file="resources/config.json"):
     """
     Load configuration from JSON file.
 
     PARAMETERS:
-        config_file (str): Path to configuration file (default: config.json)
+        config_file (str): Path to configuration file (default: resources/config.json)
 
     RETURNS:
         dict: Configuration dictionary with API keys and settings
@@ -71,7 +71,7 @@ print("="*70)
 
 try:
     CONFIG = load_config()
-    print(f"✅ Configuration loaded successfully from config.json")
+    print(f"✅ Configuration loaded successfully from resources/config.json")
     print(f"   API Keys found: {len(CONFIG['api_keys'])}")
     for i, key_info in enumerate(CONFIG['api_keys'], 1):
         print(f"   - {key_info['label']}: {key_info['key'][:20]}...{key_info['key'][-10:]} (limit: {key_info.get('limit', 250)})")
@@ -747,7 +747,7 @@ if results:
     # ======================================================
     # Automatically generate analytics report if we have results
     try:
-        from analytics import JobAnalytics
+        from resources.analytics import JobAnalytics
 
         analytics_output = OUTPUT_FILE.replace(".xlsx", "_Analytics.xlsx")
         analytics = JobAnalytics(final_df)
@@ -755,7 +755,7 @@ if results:
 
     except ImportError:
         print("\n⚠️ Analytics module not found. Skipping analytics generation.")
-        print("   To enable analytics, ensure 'analytics.py' is in the same directory.")
+        print("   To enable analytics, ensure 'analytics.py' is in resources/ directory.")
     except Exception as e:
         print(f"\n⚠️ Error generating analytics: {e}")
         print("   Job data has been saved, but analytics report was not generated.")
