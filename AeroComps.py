@@ -5,13 +5,14 @@
 #          using Google Jobs API via SerpApi, then export results to Excel
 #
 # WORKFLOW:
-#   1. Load list of aerospace companies from Excel
-#   2. For each company, build optimized search queries with trade keywords
-#   3. Query Google Jobs API (up to 3 pages per company)
-#   4. Filter results to only skilled trades positions
-#   5. Export to Excel with deduplication and checkpoints
+#   1. Load configuration from config.json (API keys, settings, file paths)
+#   2. Load list of aerospace companies from Excel
+#   3. For each company, build optimized search queries with trade keywords
+#   4. Query Google Jobs API (up to 3 pages per company)
+#   5. Filter results to only skilled trades positions
+#   6. Export to Excel with deduplication and checkpoints
 #
-# Optimized for: Anaconda + VS Code Environment
+# CONFIGURATION: Edit config.json to change settings, API keys, testing mode
 # Dependencies: pip install pandas openpyxl requests tqdm
 # ======================================================
 
@@ -20,27 +21,124 @@ import requests
 import time
 import re
 import difflib
+import json
+import os
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
-# ======================================================
-# CONFIGURATION CONSTANTS
-# ======================================================
-# These settings control API usage, file paths, and performance tuning
+# Rate Limit Protection System
+from resources.rate_limit_protection import (
+    ConfigurationValidator,
+    RateLimitProtectionCoordinator,
+    ComprehensiveAuditLogger,
+    EnhancedHealthMonitor
+)
 
-# API Authentication
-API_KEY = "4aa81d243250039b571ae3b331214224e0f253369166f54273fa553355c9eaf7"  # SerpApi key for Google Jobs API access
+# ======================================================
+# CONFIGURATION LOADER
+# ======================================================
+def load_config(config_file="resources/config.json"):
+    """
+    Load configuration from JSON file.
 
-# File Paths
-INPUT_FILE = r"C:\Users\JoseYamas\Desktop\SST Core Projects\Zac\AeroSpace Alley Comps\Aerospace_Alley_Companies.xlsx"  # Excel file with "Company Name" column
-OUTPUT_FILE = "Aerospace_Alley_SkilledTrades_Jobs.xlsx"  # Where to save job results
+    PARAMETERS:
+        config_file (str): Path to configuration file (default: resources/config.json)
+
+    RETURNS:
+        dict: Configuration dictionary with API keys and settings
+
+    RAISES:
+        FileNotFoundError: If config.json doesn't exist
+        json.JSONDecodeError: If config.json has invalid JSON
+    """
+    if not os.path.exists(config_file):
+        print(f"\n❌ ERROR: {config_file} not found!")
+        print(f"   Please create {config_file} with your API keys and settings.")
+        print(f"   See README.md for configuration instructions.\n")
+        raise FileNotFoundError(f"Configuration file {config_file} not found")
+
+    with open(config_file, 'r') as f:
+        config = json.load(f)
+
+    # Validate required fields
+    if "api_keys" not in config or len(config["api_keys"]) == 0:
+        raise ValueError("config.json must contain at least one API key in 'api_keys' array")
+    if "settings" not in config:
+        raise ValueError("config.json must contain 'settings' object")
+
+    return config
+
+
+# ======================================================
+# LOAD CONFIGURATION
+# ======================================================
+print("\n" + "="*70)
+print("AEROSPACE ALLEY JOB SCANNER - Configuration Loading")
+print("="*70)
+
+try:
+    CONFIG = load_config()
+    print(f"✅ Configuration loaded successfully from resources/config.json")
+    print(f"   API Keys found: {len(CONFIG['api_keys'])}")
+    for i, key_info in enumerate(CONFIG['api_keys'], 1):
+        print(f"   - {key_info['label']}: {key_info['key'][:20]}...{key_info['key'][-10:]} (limit: {key_info.get('limit', 250)})")
+
+    # Testing mode indicator
+    if CONFIG['settings'].get('testing_mode', False):
+        print(f"\n🧪 TESTING MODE ENABLED: Will process only {CONFIG['settings'].get('testing_company_limit', 1)} companies")
+    else:
+        print(f"\n🚀 PRODUCTION MODE: Will process all companies")
+
+    print("="*70 + "\n")
+except Exception as e:
+    print(f"\n❌ ERROR loading configuration: {e}\n")
+    exit(1)
+
+# ======================================================
+# INITIALIZE PROTECTION SYSTEM
+# ======================================================
+print("Initializing rate limit protection system...")
+try:
+    protection = RateLimitProtectionCoordinator(CONFIG)
+    rate_limiter = protection.rate_limiter
+    circuit_breaker = protection.circuit_breaker
+    batch_processor = protection.batch_processor
+    audit_logger = protection.audit_logger
+    health_monitor = protection.health_monitor  # Enhanced version
+    print("✅ Protection system initialized:")
+    print("   • Token Bucket Rate Limiter (60 calls/hour)")
+    print("   • Circuit Breaker (3 failure threshold)")
+    print("   • Exponential Backoff (3 max attempts)")
+    print("   • Batch Processor (10 companies/batch)")
+    print("   • Audit Logger (log/api_audit.jsonl)")
+    print("   • Health Monitor (real-time alerts)")
+    print("="*70 + "\n")
+except Exception as e:
+    print(f"\n❌ ERROR initializing protection system: {e}\n")
+    exit(1)
+
+
+# ======================================================
+# CONFIGURATION CONSTANTS (Loaded from config.json)
+# ======================================================
+# API Authentication - Use primary API key by default
+API_KEY = CONFIG['api_keys'][0]['key']  # Primary API key
+API_KEY_LABEL = CONFIG['api_keys'][0]['label']  # Label for logging
+
+# File Paths (from config)
+INPUT_FILE = CONFIG['settings']['input_file']
+OUTPUT_FILE = CONFIG['settings']['output_file']
 
 # Query Optimization
-MAX_QUERY_LENGTH = 200  # Google Jobs has ~200 character limit for search queries
+MAX_QUERY_LENGTH = CONFIG['settings'].get('max_query_length', 200)
 
 # Performance Tuning
-MAX_THREADS = 5  # Number of companies to process in parallel (balance speed vs. rate limits)
+MAX_THREADS = CONFIG['settings'].get('max_threads', 5)
+
+# Testing Mode
+TESTING_MODE = CONFIG['settings'].get('testing_mode', False)
+TESTING_COMPANY_LIMIT = CONFIG['settings'].get('testing_company_limit', 1)
 
 
 # ======================================================
@@ -51,12 +149,115 @@ MAX_THREADS = 5  # Number of companies to process in parallel (balance speed vs.
 
 api_lock = Lock()  # Ensures only one thread accesses API counter at a time
 api_calls = 0  # Tracks total API calls made during this run
-MAX_API_CALLS = 250  # Stop processing after this many calls (stay under SerpApi monthly limit)
+MAX_API_CALLS = CONFIG['settings'].get('max_api_calls_per_key', 250)  # API call limit per key
 api_limit_reached = False  # Global flag: when True, all threads stop making requests
 
 # Rate Limiting: Prevent burst requests that trigger 429 errors
 last_call_time = 0  # Timestamp of most recent API call
-MIN_INTERVAL = 1.2  # Minimum seconds between API calls (prevents rate limit violations)
+MIN_INTERVAL = CONFIG['settings'].get('min_interval_seconds', 1.2)  # Minimum seconds between API calls
+
+
+# ======================================================
+# HEALTH MONITORING SYSTEM
+# ======================================================
+# NOTE: Using EnhancedHealthMonitor from rate_limit_protection module
+# Initialized globally as part of protection system (line 108)
+# Provides enhanced monitoring with:
+# - More detailed metrics and response time tracking
+# - Configurable alert thresholds
+# - Automatic fallback triggers
+# - Real-time health reports
+
+
+# ======================================================
+# RESPONSE VALIDATION
+# ======================================================
+def validate_api_response(response, company):
+    """
+    Validates SerpAPI response for errors and data quality.
+
+    CHECKS:
+    - HTTP status code
+    - JSON parsing
+    - API error messages
+    - Required fields present
+
+    PARAMETERS:
+        response (requests.Response): API response
+        company (str): Company name (for logging)
+
+    RETURNS:
+        tuple: (is_valid: bool, data: dict or None, error_message: str or None)
+    """
+    # Check HTTP status
+    if response.status_code != 200:
+        error_msg = f"HTTP {response.status_code}"
+
+        # Specific error messages
+        if response.status_code == 403:
+            error_msg += " - API blocked or rate limited (IP restriction)"
+        elif response.status_code == 429:
+            error_msg += " - Too many requests (rate limit)"
+        elif response.status_code == 401:
+            error_msg += " - Invalid API key"
+        elif response.status_code == 402:
+            error_msg += " - API credits exhausted"
+        elif response.status_code >= 500:
+            error_msg += " - Server error"
+
+        return False, None, error_msg
+
+    # Parse JSON
+    try:
+        data = response.json()
+    except Exception as e:
+        return False, None, f"Invalid JSON response: {e}"
+
+    # Check for API error field
+    if "error" in data:
+        return False, None, f"API Error: {data['error']}"
+
+    # Validate required fields
+    if "search_metadata" not in data:
+        return False, None, "Missing search_metadata (possible API issue)"
+
+    # Valid response
+    return True, data, None
+
+
+# ======================================================
+# COMPANY NAME MATCHING
+# ======================================================
+def validate_company_match(target_company, api_company, threshold=0.65):
+    """
+    Validates that job is from target company (fuzzy matching).
+
+    RATIONALE:
+    - Google Jobs may return jobs from similarly-named companies
+    - E.g., "GKN Aerospace" might return "GKN Industries" jobs
+    - Use fuzzy matching to validate company name similarity
+
+    PARAMETERS:
+        target_company (str): Company we're searching for
+        api_company (str): Company name from API response
+        threshold (float): Minimum similarity score (0-1)
+
+    RETURNS:
+        bool: True if match is good enough
+    """
+    if not api_company:
+        return False  # No company name in response
+
+    from difflib import SequenceMatcher
+
+    # Normalize names (lowercase, remove special chars)
+    target_clean = re.sub(r'[^a-z0-9\s]', '', target_company.lower())
+    api_clean = re.sub(r'[^a-z0-9\s]', '', api_company.lower())
+
+    # Calculate similarity
+    similarity = SequenceMatcher(None, target_clean, api_clean).ratio()
+
+    return similarity >= threshold
 
 # ======================================================
 # FUNCTION: safe_api_request()
@@ -79,7 +280,15 @@ MIN_INTERVAL = 1.2  # Minimum seconds between API calls (prevents rate limit vio
 def safe_api_request(params, company):
     global api_calls, last_call_time, api_limit_reached
 
-    # Critical section: Only one thread can access API counter/timer at a time
+    # CHECK CIRCUIT BREAKER: Stop if too many failures
+    if not circuit_breaker.is_available():
+        print(f"\n⛔ CIRCUIT BREAKER OPEN - Stopping all API calls")
+        print(f"   Reason: Too many consecutive failures detected")
+        print(f"   System will pause to prevent further issues")
+        api_limit_reached = True
+        return None
+
+    # Critical section: Only one thread can access API counter at a time
     with api_lock:
         # Check if we've hit the API quota limit
         if api_calls >= MAX_API_CALLS:
@@ -88,20 +297,56 @@ def safe_api_request(params, company):
                 print(f"\n⚠️ API LIMIT REACHED ({MAX_API_CALLS} calls) — All threads will stop processing.\n")
             return None
 
-        # Rate limiting: Enforce minimum spacing between API calls
-        # This prevents burst requests that trigger 429 "Too Many Requests" errors
-        now = time.time()
-        elapsed = now - last_call_time
-        if elapsed < MIN_INTERVAL:
-            time.sleep(MIN_INTERVAL - elapsed)
-        last_call_time = time.time()
+        # RATE LIMITING: Use token bucket algorithm (blocks if needed)
+        # This replaces manual time.sleep() with industry-standard rate limiting
+        rate_limiter.acquire(1)
 
         # Increment counter and log progress
         api_calls += 1
-        print(f"API call #{api_calls} → {company}")
+        print(f"API call #{api_calls} ({API_KEY_LABEL}) → {company}")
 
     # Make the actual API request (outside the lock to allow other threads to proceed)
-    return requests.get("https://serpapi.com/search.json", params=params)
+    # 30-second timeout prevents hanging on slow/failed connections
+    start_time = time.time()
+
+    try:
+        response = requests.get("https://serpapi.com/search.json", params=params, timeout=30)
+        response_time_ms = (time.time() - start_time) * 1000
+
+        # AUDIT LOG: Record all API calls for compliance
+        audit_logger.log_api_call(
+            company=company,
+            status_code=response.status_code,
+            response_time_ms=response_time_ms,
+            jobs_found=0,  # Updated later in fetch_jobs_for_company()
+            api_key_label=API_KEY_LABEL
+        )
+
+        # UPDATE CIRCUIT BREAKER: Track success/failure
+        if response.status_code == 200:
+            circuit_breaker.record_success()
+        else:
+            circuit_breaker.record_failure()
+
+            # LOG RATE LIMIT ERRORS SPECIFICALLY
+            if response.status_code in [403, 429]:
+                audit_logger.log_rate_limit(
+                    status_code=response.status_code,
+                    company=company,
+                    message=f"Rate limit detected: HTTP {response.status_code}"
+                )
+
+        return response
+
+    except Exception as e:
+        response_time_ms = (time.time() - start_time) * 1000
+        circuit_breaker.record_failure()
+        audit_logger.log_error(
+            error_type="request_exception",
+            message=str(e),
+            company=company
+        )
+        raise e
 
 
 # ======================================================
@@ -189,9 +434,22 @@ SKILLED_TRADES_KEYWORDS = [
 #   - df: Full DataFrame (kept for potential future use)
 #   - companies: Array of unique company names (duplicates removed)
 #   - results: Empty list to store job listings (populated during processing)
+#
+# TESTING MODE: If enabled, only process limited number of companies
 
+print(f"Loading company list from: {INPUT_FILE}")
 df = pd.read_excel(INPUT_FILE)
 companies = df["Company Name"].dropna().unique()  # Remove NaN values and duplicates
+
+# Apply testing mode filter if enabled
+total_companies = len(companies)
+if TESTING_MODE:
+    companies = companies[:TESTING_COMPANY_LIMIT]
+    print(f"🧪 TESTING MODE: Processing {len(companies)} of {total_companies} companies")
+    print(f"   Companies to test: {', '.join(companies)}")
+else:
+    print(f"📊 Loaded {total_companies} companies to process")
+
 results = []  # Will store all job listings across all companies
 
 
@@ -222,23 +480,37 @@ results = []  # Will store all job listings across all companies
 # RETURNS:
 #   str: Optimized search query string
 
-def build_trade_query(company_name, keywords, max_length=MAX_QUERY_LENGTH):
-    """Builds job search query ensuring length limit compliance."""
+def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH):
+    """
+    Builds job search query for Google Jobs API.
+
+    SIMPLIFIED APPROACH (FIXED):
+    - Uses company name ONLY (no complex OR logic)
+    - Lets Google Jobs find ALL jobs at the company
+    - Post-filtering handles skilled trades selection
+
+    RATIONALE:
+    - Complex OR queries ("Company keyword1 OR keyword2") cause Google to search
+      for keyword1/keyword2 ANYWHERE, not just at the target company
+    - Simple company name query returns company-specific results
+    - More reliable and better results
+
+    PARAMETERS:
+        company_name (str): Company name to search
+        keywords (list): IGNORED - kept for backward compatibility
+        max_length (int): IGNORED - kept for backward compatibility
+
+    RETURNS:
+        str: Simple company name query
+    """
     # Remove special characters that could interfere with search
     # Keep alphanumeric, ampersands (&), and spaces
     clean_name = re.sub(r"[^a-zA-Z0-9&\s]", "", company_name).strip()
 
-    # Build query by adding keywords until we hit the length limit
-    query_parts = []
-    for kw in keywords:
-        # Test if adding this keyword would exceed the limit
-        tentative = f"{clean_name} {' OR '.join(query_parts + [kw])}"
-        if len(tentative) > max_length:
-            break  # Stop adding keywords
-        query_parts.append(kw)
-
-    # Return final query: "Company keyword1 OR keyword2 OR keyword3..."
-    return f"{clean_name} " + " OR ".join(query_parts)
+    # SIMPLE: Just return company name
+    # Google Jobs will find all positions at this company
+    # We filter for skilled trades in post-processing
+    return clean_name
 
 
 # ======================================================
@@ -301,27 +573,49 @@ def fetch_jobs_for_company(company):
 
         # Retry logic: Try up to 3 times if connection fails
         response = None
+        data = None
+        response_time_ms = 0
         for attempt in range(3):
             try:
+                request_start = time.time()
                 response = safe_api_request(params, company)
+                response_time_ms = (time.time() - request_start) * 1000
+
                 if response is None:
                     # API limit reached, return what we've collected so far
+                    health_monitor.record_call(
+                        status_code=0,
+                        company=company,
+                        jobs_found=len(local_results),
+                        response_time_ms=response_time_ms
+                    )
                     return local_results
-                if response.status_code == 200:
+
+                # Validate API response using comprehensive validation
+                is_valid, data, error_msg = validate_api_response(response, company)
+                if is_valid:
                     break  # Success, exit retry loop
-                time.sleep(3)  # Wait before retrying
+                else:
+                    print(f"[{company}] Validation failed: {error_msg}")
+                    health_monitor.record_call(
+                        status_code=response.status_code,
+                        company=company,
+                        jobs_found=0,
+                        response_time_ms=response_time_ms
+                    )
+                    if response.status_code in [403, 429]:  # Rate limit errors - don't retry
+                        return local_results
+                    time.sleep(3)  # Wait before retrying for other errors
             except Exception as e:
                 print(f"[{company}] Connection error, retrying... {e}")
                 time.sleep(3)
 
         # If all retries failed, skip this page
-        if response is None or not response.ok:
+        if data is None:
             if response:
-                print(f"[{company}] Skipped (HTTP {response.status_code})")
+                print(f"[{company}] Skipped after {attempt+1} attempts")
             continue
 
-        # Parse JSON response
-        data = response.json()
         job_results = data.get("jobs_results", [])
 
         # Optimization: If first page has no results, skip remaining pages
@@ -334,8 +628,14 @@ def fetch_jobs_for_company(company):
         # Process each job listing
         for job in job_results:
             title = job.get("title", "")
+            api_company = job.get("company_name", "")
 
-            # CRITICAL FILTER: Only keep jobs with skilled trades keywords in title
+            # VALIDATION 1: Verify job is actually from target company (fuzzy match)
+            # Prevents false positives from similar company names or broad searches
+            if not validate_company_match(company, api_company):
+                continue  # Skip job from different company
+
+            # VALIDATION 2: Only keep jobs with skilled trades keywords in title
             # This removes management, engineering, software roles, etc.
             if any(kw.lower() in title.lower() for kw in SKILLED_TRADES_KEYWORDS):
                 local_results.append({
@@ -352,54 +652,87 @@ def fetch_jobs_for_company(company):
         # Brief pause between pages to avoid triggering rate limits
         time.sleep(1)
 
+    # Record successful processing in health monitor
+    health_monitor.record_call(
+        status_code=200,
+        company=company,
+        jobs_found=len(local_results),
+        response_time_ms=response_time_ms if 'response_time_ms' in locals() else 0
+    )
+
     print(f"[{company}] → {len(local_results)} skilled-trade jobs found")
     return local_results
 
 
 # ======================================================
-# MAIN EXECUTION: Parallel Company Processing
+# MAIN EXECUTION: Batch Processing with Rate Limit Protection
 # ======================================================
-# PURPOSE: Process multiple companies simultaneously to maximize speed
+# PURPOSE: Process companies in controlled batches to prevent API blocking
 #
 # HOW IT WORKS:
-#   - ThreadPoolExecutor creates a pool of worker threads (MAX_THREADS = 5)
-#   - Each thread processes one company at a time
-#   - As companies finish, new ones are assigned to available threads
-#   - Progress bar (tqdm) shows real-time completion status
+#   - Batch processor groups companies into batches (10 companies each)
+#   - Each batch is processed with pauses between batches
+#   - Rate limiter ensures safe spacing between API calls
+#   - Circuit breaker stops processing if too many failures occur
 #
 # FEATURES:
-#   - Parallel processing: 5 companies at once (configurable)
+#   - Batch processing: 10 companies per batch (human-like pattern)
+#   - Automatic pauses: 2-5 minutes between batches (prevents IP blocking)
 #   - Progressive checkpoints: Save results every 25 companies (prevents data loss)
 #   - Error handling: Individual company failures don't crash entire process
-#   - Result aggregation: All jobs collected into single results list
+#   - Health monitoring: Real-time alerts for API issues
 #
 # PERFORMANCE:
-#   - Single-threaded: ~50 companies/hour (1.2s per API call × 3 pages)
-#   - Multi-threaded (5 workers): ~200-250 companies/hour
-#   - Bottleneck: API rate limits (MIN_INTERVAL = 1.2s between calls)
+#   - ~40-50 minutes for 137 companies (safe, sustainable pace)
+#   - ~3 seconds between API calls (prevents rate limiting)
+#   - ~14 batches with automatic pauses (mimics human behavior)
+#   - Bottleneck: Intentionally slowed for API compliance
 
-with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-    # Submit all companies to the thread pool
-    # futures = {Future object: company_name}
-    futures = {executor.submit(fetch_jobs_for_company, company): company for company in companies}
+print(f"\n{'='*70}")
+print(f"Starting batch processing: {len(companies)} companies")
+print(f"{'='*70}\n")
 
-    # Process results as they complete (not necessarily in order)
-    for i, future in enumerate(tqdm(as_completed(futures), total=len(futures), desc="Processing companies")):
-        company = futures[future]
-        try:
-            # Retrieve job results from completed thread
-            company_results = future.result()
-            results.extend(company_results)  # Add to master results list
+# Process companies in batches
+for i, company in enumerate(tqdm(companies, desc="Processing companies")):
+    try:
+        # Check if we should stop (circuit breaker, API limit, etc.)
+        if api_limit_reached:
+            print(f"\n⚠️ Processing stopped: API limit reached")
+            break
 
-            # CHECKPOINT SAVE: Every 25 companies, save progress to disk
-            # This prevents losing all data if script crashes or API limit is hit
-            if i % 25 == 0 and results:
-                pd.DataFrame(results).drop_duplicates(subset=["Company", "Job Title", "Source URL"]).to_excel(OUTPUT_FILE, index=False)
-                print(f"Checkpoint saved ({len(results)} total records).")
+        # Process single company
+        company_results = fetch_jobs_for_company(company)
+        results.extend(company_results)  # Add to master results list
 
-        except Exception as e:
-            # Log error but continue processing other companies
-            print(f"⚠️ Error processing {company}: {e}")
+        # CHECK FOR FALLBACK TRIGGER: Detect API health issues
+        should_fallback, reason = health_monitor.should_trigger_fallback()
+        if should_fallback:
+            print(f"\n{'='*60}")
+            print(f"🚨 FALLBACK TRIGGER DETECTED: {reason}")
+            print(f"{'='*60}")
+            print(health_monitor.get_summary())
+            print(f"\n⚠️ SerpAPI appears to have issues. Stopping to prevent IP block.")
+            print(f"   Check log/api_audit.jsonl for detailed analysis.")
+            print(f"{'='*60}\n")
+            break  # Stop processing to prevent further issues
+
+        # CHECKPOINT SAVE: Every 25 companies, save progress to disk
+        # This prevents losing all data if script crashes or API limit is hit
+        if (i + 1) % 25 == 0 and results:
+            pd.DataFrame(results).drop_duplicates(subset=["Company", "Job Title", "Source URL"]).to_excel(OUTPUT_FILE, index=False)
+            print(f"💾 Checkpoint saved ({len(results)} total records)")
+
+        # BATCH PAUSE: Every 10 companies, take a human-like break
+        if (i + 1) % 10 == 0 and (i + 1) < len(companies):
+            pause_duration = batch_processor.calculate_pause()
+            print(f"\n⏸️  Batch {(i + 1) // 10} complete. Pausing for {pause_duration:.0f} seconds...")
+            print(f"   This prevents API rate limiting and mimics human behavior.")
+            time.sleep(pause_duration)
+            print(f"▶️  Resuming processing...\n")
+
+    except Exception as e:
+        # Log error but continue processing other companies
+        print(f"⚠️ Error processing {company}: {e}")
 
 
 # ======================================================
@@ -419,7 +752,7 @@ with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
 #   - No index column (index=False)
 
 print(f"\n{'='*60}")
-print(f"API Usage: {api_calls}/{MAX_API_CALLS} calls used")
+print(f"API Usage: {api_calls}/{MAX_API_CALLS} calls used ({API_KEY_LABEL})")
 if api_limit_reached:
     print(f"⚠️ API limit reached — some companies may not have been processed")
 print(f"{'='*60}\n")
@@ -427,6 +760,12 @@ print(f"{'='*60}\n")
 if results:
     # Create DataFrame and remove duplicates
     final_df = pd.DataFrame(results).drop_duplicates(subset=["Company", "Job Title", "Source URL"])
+
+    # Ensure output directory exists
+    output_dir = os.path.dirname(OUTPUT_FILE)
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print(f"📁 Created output directory: {output_dir}")
 
     # Save to Excel
     final_df.to_excel(OUTPUT_FILE, index=False)
@@ -439,7 +778,7 @@ if results:
     # ======================================================
     # Automatically generate analytics report if we have results
     try:
-        from analytics import JobAnalytics
+        from resources.analytics import JobAnalytics
 
         analytics_output = OUTPUT_FILE.replace(".xlsx", "_Analytics.xlsx")
         analytics = JobAnalytics(final_df)
@@ -447,7 +786,7 @@ if results:
 
     except ImportError:
         print("\n⚠️ Analytics module not found. Skipping analytics generation.")
-        print("   To enable analytics, ensure 'analytics.py' is in the same directory.")
+        print("   To enable analytics, ensure 'analytics.py' is in resources/ directory.")
     except Exception as e:
         print(f"\n⚠️ Error generating analytics: {e}")
         print("   Job data has been saved, but analytics report was not generated.")
@@ -455,4 +794,14 @@ if results:
 else:
     # No jobs found across all companies
     print("⚠️ No skilled-trade jobs found. Try adjusting keywords or company list.")
+
+# ======================================================
+# API HEALTH SUMMARY
+# ======================================================
+# Display comprehensive API health metrics
+print(f"\n{'='*60}")
+print("API HEALTH SUMMARY")
+print(f"{'='*60}")
+print(health_monitor.get_summary())
+print(f"{'='*60}\n")
 
