@@ -125,6 +125,184 @@ api_limit_reached = False  # Global flag: when True, all threads stop making req
 last_call_time = 0  # Timestamp of most recent API call
 MIN_INTERVAL = CONFIG['settings'].get('min_interval_seconds', 1.2)  # Minimum seconds between API calls
 
+
+# ======================================================
+# HEALTH MONITORING SYSTEM
+# ======================================================
+class APIHealthMonitor:
+    """
+    Monitors API health and detects when fallback strategies should be triggered.
+
+    Tracks:
+    - API call success/failure rates
+    - Consecutive failures
+    - Rate limit errors
+    - Companies with/without jobs
+
+    Triggers fallback when:
+    - 5+ consecutive failures
+    - 3+ rate limit errors
+    - <15% success rate after 10 companies
+    """
+    def __init__(self):
+        self.total_calls = 0
+        self.successful_calls = 0
+        self.failed_calls = 0
+        self.rate_limit_errors = 0
+        self.companies_processed = 0
+        self.companies_with_jobs = 0
+        self.consecutive_failures = 0
+        self.total_jobs_found = 0
+
+    def record_call(self, status_code, company, jobs_found):
+        """Record API call result"""
+        self.total_calls += 1
+        self.companies_processed += 1
+
+        if status_code == 200:
+            self.successful_calls += 1
+            self.consecutive_failures = 0
+        else:
+            self.failed_calls += 1
+            self.consecutive_failures += 1
+
+        if status_code in [403, 429]:
+            self.rate_limit_errors += 1
+
+        if jobs_found > 0:
+            self.companies_with_jobs += 1
+            self.total_jobs_found += jobs_found
+
+    def should_trigger_fallback(self):
+        """Determine if fallback strategy should be triggered"""
+        # Trigger 1: Consecutive failures
+        if self.consecutive_failures >= 5:
+            return True, "consecutive_failures"
+
+        # Trigger 2: Rate limited
+        if self.rate_limit_errors >= 3:
+            return True, "rate_limited"
+
+        # Trigger 3: Low success rate (after minimum sample)
+        if self.companies_processed >= 10:
+            success_rate = self.companies_with_jobs / self.companies_processed
+            if success_rate < 0.15:  # Less than 15%
+                return True, "low_success_rate"
+
+        return False, None
+
+    def get_summary(self):
+        """Get health summary"""
+        success_rate = (self.companies_with_jobs / self.companies_processed * 100
+                       if self.companies_processed > 0 else 0)
+        avg_jobs = (self.total_jobs_found / self.companies_with_jobs
+                   if self.companies_with_jobs > 0 else 0)
+
+        return {
+            "companies_processed": self.companies_processed,
+            "companies_with_jobs": self.companies_with_jobs,
+            "success_rate": f"{success_rate:.1f}%",
+            "total_jobs_found": self.total_jobs_found,
+            "avg_jobs_per_company": f"{avg_jobs:.1f}",
+            "consecutive_failures": self.consecutive_failures,
+            "rate_limit_errors": self.rate_limit_errors
+        }
+
+
+# Initialize global health monitor
+health_monitor = APIHealthMonitor()
+
+
+# ======================================================
+# RESPONSE VALIDATION
+# ======================================================
+def validate_api_response(response, company):
+    """
+    Validates SerpAPI response for errors and data quality.
+
+    CHECKS:
+    - HTTP status code
+    - JSON parsing
+    - API error messages
+    - Required fields present
+
+    PARAMETERS:
+        response (requests.Response): API response
+        company (str): Company name (for logging)
+
+    RETURNS:
+        tuple: (is_valid: bool, data: dict or None, error_message: str or None)
+    """
+    # Check HTTP status
+    if response.status_code != 200:
+        error_msg = f"HTTP {response.status_code}"
+
+        # Specific error messages
+        if response.status_code == 403:
+            error_msg += " - API blocked or rate limited (IP restriction)"
+        elif response.status_code == 429:
+            error_msg += " - Too many requests (rate limit)"
+        elif response.status_code == 401:
+            error_msg += " - Invalid API key"
+        elif response.status_code == 402:
+            error_msg += " - API credits exhausted"
+        elif response.status_code >= 500:
+            error_msg += " - Server error"
+
+        return False, None, error_msg
+
+    # Parse JSON
+    try:
+        data = response.json()
+    except Exception as e:
+        return False, None, f"Invalid JSON response: {e}"
+
+    # Check for API error field
+    if "error" in data:
+        return False, None, f"API Error: {data['error']}"
+
+    # Validate required fields
+    if "search_metadata" not in data:
+        return False, None, "Missing search_metadata (possible API issue)"
+
+    # Valid response
+    return True, data, None
+
+
+# ======================================================
+# COMPANY NAME MATCHING
+# ======================================================
+def validate_company_match(target_company, api_company, threshold=0.65):
+    """
+    Validates that job is from target company (fuzzy matching).
+
+    RATIONALE:
+    - Google Jobs may return jobs from similarly-named companies
+    - E.g., "GKN Aerospace" might return "GKN Industries" jobs
+    - Use fuzzy matching to validate company name similarity
+
+    PARAMETERS:
+        target_company (str): Company we're searching for
+        api_company (str): Company name from API response
+        threshold (float): Minimum similarity score (0-1)
+
+    RETURNS:
+        bool: True if match is good enough
+    """
+    if not api_company:
+        return False  # No company name in response
+
+    from difflib import SequenceMatcher
+
+    # Normalize names (lowercase, remove special chars)
+    target_clean = re.sub(r'[^a-z0-9\s]', '', target_company.lower())
+    api_clean = re.sub(r'[^a-z0-9\s]', '', api_company.lower())
+
+    # Calculate similarity
+    similarity = SequenceMatcher(None, target_clean, api_clean).ratio()
+
+    return similarity >= threshold
+
 # ======================================================
 # FUNCTION: safe_api_request()
 # ======================================================
@@ -168,7 +346,8 @@ def safe_api_request(params, company):
         print(f"API call #{api_calls} ({API_KEY_LABEL}) → {company}")
 
     # Make the actual API request (outside the lock to allow other threads to proceed)
-    return requests.get("https://serpapi.com/search.json", params=params)
+    # 30-second timeout prevents hanging on slow/failed connections
+    return requests.get("https://serpapi.com/search.json", params=params, timeout=30)
 
 
 # ======================================================
@@ -395,27 +574,35 @@ def fetch_jobs_for_company(company):
 
         # Retry logic: Try up to 3 times if connection fails
         response = None
+        data = None
         for attempt in range(3):
             try:
                 response = safe_api_request(params, company)
                 if response is None:
                     # API limit reached, return what we've collected so far
+                    health_monitor.record_call(0, company, len(local_results))
                     return local_results
-                if response.status_code == 200:
+
+                # Validate API response using comprehensive validation
+                is_valid, data, error_msg = validate_api_response(response, company)
+                if is_valid:
                     break  # Success, exit retry loop
-                time.sleep(3)  # Wait before retrying
+                else:
+                    print(f"[{company}] Validation failed: {error_msg}")
+                    health_monitor.record_call(response.status_code, company, 0)
+                    if response.status_code in [403, 429]:  # Rate limit errors - don't retry
+                        return local_results
+                    time.sleep(3)  # Wait before retrying for other errors
             except Exception as e:
                 print(f"[{company}] Connection error, retrying... {e}")
                 time.sleep(3)
 
         # If all retries failed, skip this page
-        if response is None or not response.ok:
+        if data is None:
             if response:
-                print(f"[{company}] Skipped (HTTP {response.status_code})")
+                print(f"[{company}] Skipped after {attempt+1} attempts")
             continue
 
-        # Parse JSON response
-        data = response.json()
         job_results = data.get("jobs_results", [])
 
         # Optimization: If first page has no results, skip remaining pages
@@ -428,8 +615,14 @@ def fetch_jobs_for_company(company):
         # Process each job listing
         for job in job_results:
             title = job.get("title", "")
+            api_company = job.get("company_name", "")
 
-            # CRITICAL FILTER: Only keep jobs with skilled trades keywords in title
+            # VALIDATION 1: Verify job is actually from target company (fuzzy match)
+            # Prevents false positives from similar company names or broad searches
+            if not validate_company_match(company, api_company):
+                continue  # Skip job from different company
+
+            # VALIDATION 2: Only keep jobs with skilled trades keywords in title
             # This removes management, engineering, software roles, etc.
             if any(kw.lower() in title.lower() for kw in SKILLED_TRADES_KEYWORDS):
                 local_results.append({
@@ -445,6 +638,9 @@ def fetch_jobs_for_company(company):
 
         # Brief pause between pages to avoid triggering rate limits
         time.sleep(1)
+
+    # Record successful processing in health monitor
+    health_monitor.record_call(200, company, len(local_results))
 
     print(f"[{company}] → {len(local_results)} skilled-trade jobs found")
     return local_results
@@ -484,6 +680,18 @@ with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
             # Retrieve job results from completed thread
             company_results = future.result()
             results.extend(company_results)  # Add to master results list
+
+            # CHECK FOR FALLBACK TRIGGER: Detect API health issues
+            should_fallback, reason = health_monitor.should_trigger_fallback()
+            if should_fallback:
+                print(f"\n{'='*60}")
+                print(f"⚠️ FALLBACK TRIGGER DETECTED: {reason}")
+                print(f"{'='*60}")
+                print(health_monitor.get_summary())
+                print(f"\n⚠️ SerpAPI appears ineffective for this dataset.")
+                print(f"📋 See COMPLETE_AUDIT_AND_FALLBACK.md for alternative strategies.")
+                print(f"{'='*60}\n")
+                # Continue processing but user is alerted to investigate alternatives
 
             # CHECKPOINT SAVE: Every 25 companies, save progress to disk
             # This prevents losing all data if script crashes or API limit is hit
@@ -555,4 +763,14 @@ if results:
 else:
     # No jobs found across all companies
     print("⚠️ No skilled-trade jobs found. Try adjusting keywords or company list.")
+
+# ======================================================
+# API HEALTH SUMMARY
+# ======================================================
+# Display comprehensive API health metrics
+print(f"\n{'='*60}")
+print("API HEALTH SUMMARY")
+print(f"{'='*60}")
+print(health_monitor.get_summary())
+print(f"{'='*60}\n")
 
