@@ -3,14 +3,13 @@
   "test1_headers": {
     "content-length": "13",
     "content-type": "text/plain",
-    "date": "Mon, 27 Oct 2025 20:17:51 GMT"
+    "date": "Mon, 27 Oct 2025 21:28:13 GMT"
   },
   "test2_status": 403,
   "test3_key1": 403,
   "test3_key2": 403,
-  "test3_key3": 403,
   "current_ip": "Unknown (network blocked)",
   "test5_internet": "working",
-  "timestamp": "2025-10-27T20:17:52.771616",
+  "timestamp": "2025-10-27T21:28:14.217463",
   "diagnosis": "IP-level block"
 }
