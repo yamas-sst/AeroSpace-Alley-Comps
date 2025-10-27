@@ -53,3 +53,7 @@ output/
 # State tracking files
 state.json
 progress.json
+
+# Log files directory
+log/
+*.log
