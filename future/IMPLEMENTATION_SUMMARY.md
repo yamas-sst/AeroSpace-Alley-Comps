@@ -125,19 +125,19 @@ or
 
 ### API Call Changes
 
-**Test configuration (25 companies, 5 per tier) - STRATEGIC:**
-- **Expected:** ~75 API calls
+**Test configuration (9 companies) - MAX 25 API CALLS:**
+- **Expected:** 25 API calls (absolute maximum)
 - **Breakdown:**
-  - Tier 1 (5 companies × 5 calls): 25 calls
-  - Tier 2 (5 companies × 4 calls): 20 calls
-  - Tier 3 (5 companies × 3 calls): 15 calls
-  - Tier 4 (5 companies × 2 calls): 10 calls
-  - Tier 5 (5 companies × 1 call): 5 calls
+  - Tier 1 (1 company × 5 calls): 5 calls
+  - Tier 2 (2 companies × 4 calls): 8 calls
+  - Tier 3 (2 companies × 3 calls): 6 calls
+  - Tier 4 (2 companies × 2 calls): 4 calls
+  - Tier 5 (2 companies × 1 call): 2 calls
 
-**Alternative tests if needed:**
-- **15 companies:** ~42 API calls (more conservative)
-- **10 companies:** ~30 API calls (minimum viable test)
-- See `TEST_25_STRATEGIC.md` for details
+**Alternative tests if even fewer calls needed:**
+- **7 companies:** 20 API calls (conservative)
+- **5 companies:** 15 API calls (absolute minimum)
+- See `TEST_MAX_25_CALLS.md` for complete details
 
 **Full production (137 companies):**
 - **Expected:** ~225 API calls (vs. 137 currently)
@@ -202,53 +202,55 @@ grep -n "MAX_JOBS = get_job_cap_for_company" AeroComps.py
 
 ### Step 2: Create Test Configuration
 
-**Create:** `resources/config_test_5tier.json`
+**Create:** `resources/config_test_max25.json`
 
 ```json
 {
   "api_keys": [
     {
-      "label": "Test-5Tier",
+      "label": "Test-Max25",
       "key": "YOUR_API_KEY_HERE",
-      "limit": 200,
+      "limit": 50,
       "priority": 1
     }
   ],
   "settings": {
     "testing_mode": true,
-    "testing_company_limit": 10,
-    "input_file": "data/Test_3_Companies.xlsx",
-    "output_file": "output/Test_5Tier_Results.xlsx",
-    "max_api_calls_per_key": 200,
+    "testing_company_limit": 9,
+    "input_file": "data/Test_Max25_9Companies.xlsx",
+    "output_file": "output/Test_Max25_Results.xlsx",
+    "max_api_calls_per_key": 50,
     "min_interval_seconds": 3.0,
     "max_threads": 3
   }
 }
 ```
 
-**Note:** Start with just 10 companies for initial test (not 50)
+**Note:** Strategic test uses just 9 companies for max 25 API calls
 
 ---
 
-### Step 3: Run Test with 10 Companies
+### Step 3: Run Test with 9 Companies (Max 25 API Calls)
 
-**Option A: Use existing Test_3_Companies.xlsx**
+**Recommended: Create strategic test file**
+
+Create `data/Test_Max25_9Companies.xlsx` with exactly 9 companies:
+
+**Tier distribution (25 API calls total):**
+- 1 Tier 1: Pratt & Whitney (5 calls)
+- 2 Tier 2: Sikorsky, Barnes Aerospace (8 calls)
+- 2 Tier 3: GKN Aerospace, Chromalloy (6 calls)
+- 2 Tier 4: Curtiss-Wright, Aero Gear (4 calls)
+- 2 Tier 5: Any small shops (2 calls)
+
+**See:** `TEST_MAX_25_CALLS.md` for complete details
 
 ```bash
-# This will test with Barnes Aerospace, etc.
+# Run test
 python AeroComps.py
+
+# Expected: 25 API calls, 2-3 minutes processing
 ```
-
-**Option B: Create custom test file with known companies**
-
-Create `data/Test_10_Mixed.xlsx` with:
-- 2 Tier 1: Pratt & Whitney, Collins Aerospace
-- 2 Tier 2: Sikorsky, Barnes Aerospace
-- 2 Tier 3: GKN Aerospace, Chromalloy
-- 2 Tier 4: Curtiss-Wright, Aero Gear
-- 2 Tier 5: (any small shops from your dataset)
-
-Then update config to point to this file.
 
 ---
 
@@ -415,9 +417,9 @@ git commit -m "Add 5-tier adaptive caps and expanded keywords - TESTING"
 6. ✅ Processing time reasonable (< 5 minutes for 10 companies)
 
 **If successful:**
-- Scale up to 25 companies (5 per tier) - see `TEST_25_STRATEGIC.md`
-- Then deploy to full 137 companies
-- Commit and push changes
+- Deploy directly to full 137 companies (validated all 5 tiers)
+- Or test another 9 companies for additional confidence (another 25 calls)
+- Commit and celebrate!
 
 **If issues found:**
 - Report specific problems
@@ -438,9 +440,9 @@ Before testing, think about:
    - Small shops unlikely to have these roles
 
 3. **How many API calls are you comfortable using for testing?**
-   - 10 companies (2 per tier): ~30 calls (minimum test)
-   - 15 companies (3 per tier): ~42 calls (conservative)
-   - 25 companies (5 per tier): ~75 calls (strategic, recommended)
+   - 5 companies (1 per tier): 15 calls (absolute minimum)
+   - 7 companies (mixed): 20 calls (conservative)
+   - 9 companies (recommended): 25 calls (strategic maximum)
    - 137 companies (full): ~225 calls (production)
 
 4. **Do you want categorization columns in Excel?**
