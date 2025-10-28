@@ -378,20 +378,21 @@ def safe_api_request(params, company):
 # LAST UPDATED: October 2025
 
 # ======================================================
-# SMART KEYWORD MATCHING - WORD-BASED APPROACH
+# COMPREHENSIVE JOB MATCHING - ALL AEROSPACE ROLES
 # ======================================================
-# Instead of hardcoding 185+ keyword variants, we use core trade words
-# and check if job titles CONTAIN these words (word boundaries).
+# Captures ALL job types at aerospace companies using word-based matching.
 #
-# ADVANTAGES:
-# - "engineer" matches: "Manufacturing Engineer", "Mfg Engineer", "Process Engineer"
-# - "technician" matches: "Electronics Technician", "Electronic Technician", "Eng Technician"
-# - "machinist" matches: "CNC Machinist", "Manual Machinist", "Production Machinist"
-# - Much easier to maintain (40 words vs 185+ hardcoded strings)
+# SCOPE: Complete labor market intelligence for CT aerospace industry
+# - Manufacturing: Machinists, Welders, Assemblers, Operators
+# - Engineering: ALL types (Manufacturing, Software, Design, Quality, etc.)
+# - Business: Sales, Marketing, HR, Finance, Accounting
+# - IT: Software Developers, Network Engineers, Data Analysts, IT Support
+# - Admin: Office Staff, Receptionists, Administrative Assistants
+# - Management: Directors, Managers, Supervisors, Executives
+# - Skilled Trades: Electricians, Plumbers, HVAC, Inspectors
 #
-# EXCLUSIONS: Filter out unwanted roles even if they contain trade words
-# - "Software Engineer" (has "engineer" but excluded)
-# - "IT Supervisor" (has "supervisor" but excluded)
+# EXCLUSIONS: Only truly unrelated jobs (medical staff, janitorial)
+# - Everything else is INCLUDED for comprehensive market analysis
 
 CORE_TRADE_WORDS = [
     # Machining & Fabrication
@@ -415,58 +416,56 @@ CORE_TRADE_WORDS = [
     # Technical Roles
     "technician", "tech",
 
-    # Engineering & Technical Leadership
+    # Engineering (ALL types)
     "engineer", "engineering", "supervisor", "foreman", "superintendent", "lead",
 
-    # Programming & Planning
-    "programmer", "planner", "coordinator",  # Now allowed (production coordinator, etc.)
+    # IT & Software (ALL included)
+    "software", "developer", "programmer", "analyst", "it ", "information technology",
+    "network", "cyber", "data", "systems", "database",
+
+    # Business & Admin (ALL included)
+    "sales", "marketing", "hr", "human resources", "recruiter", "accounting",
+    "finance", "purchasing", "buyer", "accountant", "financial",
+    "office", "administrative", "admin", "receptionist", "assistant",
+    "secretary", "clerk", "coordinator",
+
+    # Management & Leadership
+    "manager", "director", "vp", "vice president", "president", "executive",
+    "specialist", "representative", "associate",
+
+    # Planning & Operations
+    "planner", "scheduler", "logistics", "supply chain", "operations",
+    "project manager", "program manager",
+
+    # Design & Creative
+    "designer", "design", "architect", "drafter", "cad",
 ]
 
 EXCLUSION_PATTERNS = [
-    # Software/IT roles (non-manufacturing)
-    "software", "it ", "information technology", "network", "cyber",
-    "service desk", "help desk", "desktop", "systems admin",
-
-    # Pure business roles (non-manufacturing)
-    "sales", "marketing", "hr", "human resources", "accounting", "finance",
-    "business development",
-
-    # Non-manufacturing creative/design (but allow engineering design)
-    "graphic", "ui/ux",
-
-    # C-level executives
-    " vp ", "vice president", " director", " president", " ceo ", " cfo ", " cto ",
-
-    # Internships/Entry-level training
-    "intern", "co-op",
-
-    # Medical/Facilities (non-manufacturing)
-    "nurse", "doctor", "medical", "clinical", "janitorial", "custodian",
-
-    # Field service roles
-    "field service rep", "operations excellence",
+    # Only exclude truly unrelated jobs (medical, custodial)
+    # EVERYTHING ELSE is included (all aerospace company jobs)
+    "nurse", "doctor", "physician", "medical", "clinical",
+    "janitorial", "custodian", "janitor", "housekeeper",
 ]
 
 def is_skilled_trade_job(job_title):
     """
-    Smart matching: checks if job title contains core trade words.
+    Broad matching: checks if job title is aerospace industry-related.
 
     Returns True if:
     - Title contains at least one CORE_TRADE_WORD
-    - AND title does NOT contain EXCLUSION_PATTERNS
+    - AND title does NOT contain EXCLUSION_PATTERNS (only medical/janitorial)
 
-    Examples:
-        ✅ "Manufacturing Engineer" → True (has "engineer")
-        ✅ "Mfg Engineer" → True (has "engineer")
-        ✅ "Process Engineer Sr" → True (has "engineer")
-        ✅ "Production Supervisor" → True (has "supervisor")
-        ✅ "Electronic Technician" → True (has "technician")
-        ✅ "Electronics Technician" → True (has "technician")
-        ✅ "CNC Machinist" → True (has "machinist")
-        ✅ "A&P Mechanic" → True (has "mechanic")
-        ❌ "Software Engineer" → False (excluded: "software")
-        ❌ "IT Supervisor" → False (excluded: "it")
-        ❌ "Sales Coordinator" → False (excluded: "sales")
+    Captures ALL aerospace company jobs:
+        ✅ Manufacturing Engineer, Process Engineer, Software Engineer
+        ✅ CNC Machinist, Welder, Electrician, Inspector
+        ✅ HR Manager, Accountant, Sales Representative
+        ✅ IT Administrator, Network Engineer, Data Analyst
+        ✅ Production Supervisor, Project Manager, Director
+        ✅ Administrative Assistant, Receptionist, Office Clerk
+        ✅ Intern, Co-Op, Trainee positions
+        ❌ Nurse, Doctor (medical - not aerospace)
+        ❌ Janitor, Custodian (facilities - not aerospace core)
     """
     title_lower = job_title.lower()
 
