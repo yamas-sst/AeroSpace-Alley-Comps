@@ -310,6 +310,15 @@ def safe_api_request(params, company):
     start_time = time.time()
 
     try:
+        # DEBUG: Print actual params being sent
+        print(f"\n🔍 DEBUG - Sending API request:")
+        print(f"   Company: {company}")
+        for key, value in params.items():
+            if key == "api_key":
+                print(f"   {key}: {value[:20]}...{value[-10:]}")
+            else:
+                print(f"   {key}: {value}")
+                
         response = requests.get("https://serpapi.com/search.json", params=params, timeout=30)
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -510,8 +519,10 @@ def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH):
     # SIMPLE: Just return company name
     # Google Jobs will find all positions at this company
     # We filter for skilled trades in post-processing
-    return clean_name
 
+    # Add a generic skilled trades keyword to make valid job query
+    # SerpAPI requires a job-type search, not just company name
+    return f"{clean_name} machinist OR welder OR fabricator OR technician"
 
 # ======================================================
 # FUNCTION: fetch_jobs_for_company()
@@ -568,7 +579,7 @@ def fetch_jobs_for_company(company):
             "q": query,  # Search query (company + keywords)
             "api_key": API_KEY,  # Authentication
             "hl": "en",  # Language: English
-            "start": start  # Pagination offset
+            # "start": start  # Pagination offset
         }
 
         # Retry logic: Try up to 3 times if connection fails
