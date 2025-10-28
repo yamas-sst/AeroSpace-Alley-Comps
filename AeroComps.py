@@ -883,7 +883,7 @@ def fetch_jobs_for_company(company):
         return []
 
     local_results = []  # Store jobs for this company only
-    query = build_trade_query(company, SKILLED_TRADES_KEYWORDS)
+    query = build_trade_query(company)
 
     # Adaptive pagination based on company size
     # Get company-specific job cap
