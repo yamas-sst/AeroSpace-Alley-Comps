@@ -732,9 +732,10 @@ def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH):
     # Google Jobs will find all positions at this company
     # We filter for skilled trades in post-processing
 
-    # Add a generic skilled trades keyword to make valid job query
+    # Add skilled trades keywords to make valid job query
     # SerpAPI requires a job-type search, not just company name
-    return f"{clean_name} machinist OR welder OR fabricator OR technician"
+    # Expanded to include technical leadership (engineers, supervisors) and licensed trades
+    return f"{clean_name} machinist OR welder OR fabricator OR technician OR engineer OR supervisor OR electrician OR inspector"
 
 # ======================================================
 # FUNCTION: fetch_jobs_for_company()
