@@ -14,16 +14,17 @@ import os
 def convert_csv_to_excel():
     """Convert CSV test file to Excel format."""
 
-    csv_path = 'data/Test_Max25_9Companies.csv'
-    excel_path = 'data/Test_Max25_9Companies.xlsx'
+    # Use relative paths from docs/testing/ directory
+    csv_path = 'Test_Max25_9Companies.csv'
+    excel_path = 'Test_Max25_9Companies.xlsx'
 
     print("🔄 Converting CSV to Excel format...")
-    print(f"   Input:  {csv_path}")
-    print(f"   Output: {excel_path}")
+    print(f"   Input:  docs/testing/{csv_path}")
+    print(f"   Output: docs/testing/{excel_path}")
 
     # Check if CSV exists
     if not os.path.exists(csv_path):
-        print(f"\n❌ Error: {csv_path} not found!")
+        print(f"\n❌ Error: {csv_path} not found in docs/testing/!")
         return False
 
     # Read CSV
