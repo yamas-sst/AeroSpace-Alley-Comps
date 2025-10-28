@@ -722,9 +722,10 @@ def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH):
     # Keep alphanumeric, ampersands (&), and spaces
     clean_name = re.sub(r"[^a-zA-Z0-9&\s]", "", company_name).strip()
 
-    # Replace ampersands with "and" for better Google Jobs API compatibility
-    # Google Jobs API has issues parsing queries with & symbols
-    clean_name = clean_name.replace("&", "and")
+    # Replace ampersands with space for better Google Jobs API compatibility
+    # Google Jobs API has issues with & symbol and "and" connector
+    # Example: "Pratt & Whitney" → "Pratt Whitney"
+    clean_name = clean_name.replace("&", " ").replace("  ", " ").strip()
 
     # SIMPLE: Just return company name
     # Google Jobs will find all positions at this company
@@ -797,6 +798,7 @@ def fetch_jobs_for_company(company):
             "q": query,  # Search query (company + keywords)
             "api_key": API_KEY,  # Authentication
             "hl": "en",  # Language: English
+            "location": "Connecticut, United States",  # Geographic focus
             # "start": start  # Pagination offset
         }
 
