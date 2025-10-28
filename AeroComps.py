@@ -396,6 +396,7 @@ SKILLED_TRADES_KEYWORDS = [
     "line operator", "mechanical assembler", "electromechanical assembler",
     "production worker", "manufacturing technician", "machine technician",
     "assembly lead", "manufacturing associate", "packaging operator", "composite technician",
+    "engineering technician", "process technician", "prep technician", "part marking technician",
 
     # --- 1C: Welding & Metalwork (WITH CERTIFICATIONS) ---
     "welder", "tig welder", "mig welder", "arc welder", "fabrication welder",
@@ -405,7 +406,7 @@ SKILLED_TRADES_KEYWORDS = [
     "combo welder", "stick welder", "flux core welder", "orbital welder", "robotic welder",
 
     # --- 1D: Licensed Electrical Trades (CERTIFICATIONS REQUIRED) ---
-    "electrician", "electrical technician", "electronics technician",
+    "electrician", "electrical technician", "electronics technician", "electronic technician",
     "controls technician", "panel builder", "wire harness assembler",
     "electromechanical technician", "instrumentation technician", "automation technician",
     "journeyman electrician", "master electrician", "industrial electrician",
@@ -413,7 +414,7 @@ SKILLED_TRADES_KEYWORDS = [
     "controls engineer", "automation specialist", "robotics technician",
     "plc programmer", "scada technician", "instrumentation electrician",
     "high voltage electrician", "electrical inspector", "electrical designer",
-    "panel designer", "control panel technician",
+    "panel designer", "control panel technician", "electronic systems technician",
 
     # --- 1E: Plumbing, Pipefitting & HVAC (LICENSED TRADES) ---
     "plumber", "journeyman plumber", "master plumber", "pipefitter", "steamfitter",
