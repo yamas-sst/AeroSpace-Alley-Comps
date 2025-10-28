@@ -868,7 +868,15 @@ def fetch_jobs_for_company(company):
 
             # VALIDATION 2: Only keep jobs with skilled trades keywords in title
             # This removes management, engineering, software roles, etc.
-            if any(kw.lower() in title.lower() for kw in SKILLED_TRADES_KEYWORDS):
+            matched = any(kw.lower() in title.lower() for kw in SKILLED_TRADES_KEYWORDS)
+
+            # DEBUG: Show all job titles (matched and rejected)
+            if matched:
+                print(f"   ✅ MATCHED: {title}")
+            else:
+                print(f"   ❌ REJECTED: {title}")
+
+            if matched:
                 local_results.append({
                     "Company": company,
                     "Job Title": title,
