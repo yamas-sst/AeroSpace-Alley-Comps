@@ -419,33 +419,31 @@ CORE_TRADE_WORDS = [
     "engineer", "engineering", "supervisor", "foreman", "superintendent", "lead",
 
     # Programming & Planning
-    "programmer", "planner",  # Removed "coordinator" - conflicts with exclusions
+    "programmer", "planner", "coordinator",  # Now allowed (production coordinator, etc.)
 ]
 
 EXCLUSION_PATTERNS = [
-    # Software/IT roles
-    "software", "it ", "information technology", "network", "cyber", "data",
+    # Software/IT roles (non-manufacturing)
+    "software", "it ", "information technology", "network", "cyber",
     "service desk", "help desk", "desktop", "systems admin",
 
-    # Business/Admin roles
+    # Pure business roles (non-manufacturing)
     "sales", "marketing", "hr", "human resources", "accounting", "finance",
-    "office", "administrative", "admin", "receptionist", "coordinator",
-    "business office", "business development",
+    "business development",
 
-    # Design/Architecture (not manufacturing)
-    "architect", "graphic", "ui/ux", "product design", "design engineer",
-    "- design", "design tech", "designer",  # Catches "Engineer - Design", "Design Technician"
+    # Non-manufacturing creative/design (but allow engineering design)
+    "graphic", "ui/ux",
 
-    # Management (must have word boundaries to avoid false matches like 'inspector')
+    # C-level executives
     " vp ", "vice president", " director", " president", " ceo ", " cfo ", " cto ",
 
     # Internships/Entry-level training
-    "intern", "co-op",  # Re-enabled to filter out internships
+    "intern", "co-op",
 
-    # Medical/Facilities (unless trade-specific)
+    # Medical/Facilities (non-manufacturing)
     "nurse", "doctor", "medical", "clinical", "janitorial", "custodian",
 
-    # Non-manufacturing roles
+    # Field service roles
     "field service rep", "operations excellence",
 ]
 
