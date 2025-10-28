@@ -125,14 +125,19 @@ or
 
 ### API Call Changes
 
-**Test configuration (50 companies, 10 per tier):**
-- **Expected:** ~150 API calls
+**Test configuration (25 companies, 5 per tier) - STRATEGIC:**
+- **Expected:** ~75 API calls
 - **Breakdown:**
-  - Tier 1 (10 companies × 5 calls): 50 calls
-  - Tier 2 (10 companies × 4 calls): 40 calls
-  - Tier 3 (10 companies × 3 calls): 30 calls
-  - Tier 4 (10 companies × 2 calls): 20 calls
-  - Tier 5 (10 companies × 1 call): 10 calls
+  - Tier 1 (5 companies × 5 calls): 25 calls
+  - Tier 2 (5 companies × 4 calls): 20 calls
+  - Tier 3 (5 companies × 3 calls): 15 calls
+  - Tier 4 (5 companies × 2 calls): 10 calls
+  - Tier 5 (5 companies × 1 call): 5 calls
+
+**Alternative tests if needed:**
+- **15 companies:** ~42 API calls (more conservative)
+- **10 companies:** ~30 API calls (minimum viable test)
+- See `TEST_25_STRATEGIC.md` for details
 
 **Full production (137 companies):**
 - **Expected:** ~225 API calls (vs. 137 currently)
@@ -410,7 +415,7 @@ git commit -m "Add 5-tier adaptive caps and expanded keywords - TESTING"
 6. ✅ Processing time reasonable (< 5 minutes for 10 companies)
 
 **If successful:**
-- Scale up to 50 companies (10 per tier)
+- Scale up to 25 companies (5 per tier) - see `TEST_25_STRATEGIC.md`
 - Then deploy to full 137 companies
 - Commit and push changes
 
@@ -433,9 +438,10 @@ Before testing, think about:
    - Small shops unlikely to have these roles
 
 3. **How many API calls are you comfortable using for testing?**
-   - 10 companies: ~25-30 calls
-   - 50 companies: ~150 calls
-   - 137 companies: ~225 calls
+   - 10 companies (2 per tier): ~30 calls (minimum test)
+   - 15 companies (3 per tier): ~42 calls (conservative)
+   - 25 companies (5 per tier): ~75 calls (strategic, recommended)
+   - 137 companies (full): ~225 calls (production)
 
 4. **Do you want categorization columns in Excel?**
    - If yes, I can add that feature
