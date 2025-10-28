@@ -1,52 +1,0 @@
-
-======================================================================
-AEROSPACE ALLEY JOB SCANNER - Configuration Loading
-======================================================================
-✅ Configuration loaded successfully from config.json
-   API Keys found: 2
-   - Primary-Yamas: 4aa81d243250039b571a...3355c9eaf7 (limit: 250)
-   - Secondary-Zac: cda1da49d9d9d3fef6bd...bc8e36b04b (limit: 250)
-
-🧪 TESTING MODE ENABLED: Will process only 3 companies
-======================================================================
-
-Loading company list from: data/Test_3_Companies.xlsx
-🧪 TESTING MODE: Processing 3 of 3 companies
-   Companies to test: Barnes Aerospace East Granby, GKN Aerospace Engine Systems, Hanwha Aerospace USA
-API call #1 (Primary-Yamas) → Barnes Aerospace East Granby
-Processing companies:   0%|          | 0/3 [00:00<?, ?it/s]API call #2 (Primary-Yamas) → GKN Aerospace Engine Systems
-API call #3 (Primary-Yamas) → Hanwha Aerospace USA
-API call #4 (Primary-Yamas) → Barnes Aerospace East Granby
-API call #5 (Primary-Yamas) → GKN Aerospace Engine Systems
-API call #6 (Primary-Yamas) → Hanwha Aerospace USA
-API call #7 (Primary-Yamas) → Barnes Aerospace East Granby
-API call #8 (Primary-Yamas) → GKN Aerospace Engine Systems
-API call #9 (Primary-Yamas) → Hanwha Aerospace USA
-API call #10 (Primary-Yamas) → Barnes Aerospace East Granby
-API call #11 (Primary-Yamas) → GKN Aerospace Engine Systems
-API call #12 (Primary-Yamas) → Hanwha Aerospace USA
-API call #13 (Primary-Yamas) → Barnes Aerospace East Granby
-API call #14 (Primary-Yamas) → GKN Aerospace Engine Systems
-API call #15 (Primary-Yamas) → Hanwha Aerospace USA
-API call #16 (Primary-Yamas) → Barnes Aerospace East Granby
-API call #17 (Primary-Yamas) → GKN Aerospace Engine Systems
-API call #18 (Primary-Yamas) → Hanwha Aerospace USA
-API call #19 (Primary-Yamas) → Barnes Aerospace East Granby
-API call #20 (Primary-Yamas) → GKN Aerospace Engine Systems
-API call #21 (Primary-Yamas) → Hanwha Aerospace USA
-API call #22 (Primary-Yamas) → Barnes Aerospace East Granby
-API call #23 (Primary-Yamas) → GKN Aerospace Engine Systems
-API call #24 (Primary-Yamas) → Hanwha Aerospace USA
-API call #25 (Primary-Yamas) → Barnes Aerospace East Granby
-API call #26 (Primary-Yamas) → GKN Aerospace Engine Systems
-API call #27 (Primary-Yamas) → Hanwha Aerospace USA
-[Barnes Aerospace East Granby] → 0 skilled-trade jobs found
-Processing companies:  33%|███▎      | 1/3 [00:31<01:03, 31.89s/it][GKN Aerospace Engine Systems] → 0 skilled-trade jobs found
-Processing companies:  67%|██████▋   | 2/3 [00:33<00:13, 13.83s/it][Hanwha Aerospace USA] → 0 skilled-trade jobs found
-Processing companies: 100%|██████████| 3/3 [00:34<00:00,  8.06s/it]Processing companies: 100%|██████████| 3/3 [00:34<00:00, 11.43s/it]
-
-============================================================
-API Usage: 27/250 calls used (Primary-Yamas)
-============================================================
-
-⚠️ No skilled-trade jobs found. Try adjusting keywords or company list.

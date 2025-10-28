@@ -1,0 +1,19 @@
+{
+  "api_keys": [
+    {
+      "label": "Test-Max25",
+      "key": "YOUR_API_KEY_HERE",
+      "limit": 50,
+      "priority": 1
+    }
+  ],
+  "settings": {
+    "testing_mode": true,
+    "testing_company_limit": 9,
+    "input_file": "diagnostics/Test_Max25_9Companies.xlsx",
+    "output_file": "output/Test_Max25_Results.xlsx",
+    "max_api_calls_per_key": 50,
+    "min_interval_seconds": 3.0,
+    "max_threads": 3
+  }
+}

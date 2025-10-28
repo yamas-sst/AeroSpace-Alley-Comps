@@ -1,0 +1,36 @@
+{"timestamp": "2025-10-27T22:40:43.505397Z", "event_type": "audit_logger_initialized", "log_file": "log/api_audit.jsonl"}
+{"timestamp": "2025-10-27T22:40:44.390980Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 617.8619861602783, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-27T22:40:47.933594Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 536.3297462463379, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-27T22:40:51.461507Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 524.7828960418701, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-27T22:41:18.703367Z", "event_type": "audit_logger_initialized", "log_file": "log/api_audit.jsonl"}
+{"timestamp": "2025-10-27T22:41:19.469833Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 603.0101776123047, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-27T22:41:23.036392Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 564.9557113647461, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-27T22:41:26.504091Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 464.8580551147461, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-27T22:49:13.267236Z", "event_type": "audit_logger_initialized", "log_file": "log/api_audit.jsonl"}
+{"timestamp": "2025-10-27T22:49:14.010144Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 584.6142768859863, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-27T22:49:17.518788Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 507.79151916503906, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-27T22:49:21.028566Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 506.6103935241699, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:32:07.552052Z", "event_type": "audit_logger_initialized", "log_file": "log/api_audit.jsonl"}
+{"timestamp": "2025-10-28T13:32:08.350849Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 552.9141426086426, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:32:11.912216Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 558.2785606384277, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:32:15.470739Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 549.177885055542, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:33:49.835747Z", "event_type": "audit_logger_initialized", "log_file": "log/api_audit.jsonl"}
+{"timestamp": "2025-10-28T13:33:50.583165Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 592.1177864074707, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:33:54.075392Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 490.25845527648926, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:33:57.625560Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 544.8818206787109, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:41:59.474193Z", "event_type": "audit_logger_initialized", "log_file": "log/api_audit.jsonl"}
+{"timestamp": "2025-10-28T13:42:00.183551Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 546.5631484985352, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:42:03.663714Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 479.09045219421387, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:42:07.156976Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 489.6254539489746, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:59:30.728729Z", "event_type": "audit_logger_initialized", "log_file": "log/api_audit.jsonl"}
+{"timestamp": "2025-10-28T13:59:32.002646Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 1102.4386882781982, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:59:35.529807Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 523.9355564117432, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T13:59:39.390981Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 858.0646514892578, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T14:03:04.725657Z", "event_type": "audit_logger_initialized", "log_file": "log/api_audit.jsonl"}
+{"timestamp": "2025-10-28T14:03:05.474805Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 586.4803791046143, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T14:03:09.020007Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 542.8328514099121, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T14:03:12.551621Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 400, "response_time_ms": 526.7415046691895, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T14:12:48.219896Z", "event_type": "audit_logger_initialized", "log_file": "log/api_audit.jsonl"}
+{"timestamp": "2025-10-28T14:12:50.985907Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 200, "response_time_ms": 2613.126754760742, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T14:12:52.469732Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 200, "response_time_ms": 474.2124080657959, "jobs_found": 0, "api_key_label": "Yamas"}
+{"timestamp": "2025-10-28T14:12:53.930589Z", "event_type": "api_call", "company": "Barnes Aerospace East Granby", "status_code": 200, "response_time_ms": 455.7812213897705, "jobs_found": 0, "api_key_label": "Yamas"}

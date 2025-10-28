@@ -45,11 +45,17 @@ Thumbs.db
 # Configuration with secrets (DO NOT COMMIT)
 resources/config.json
 
-# Output directory (results, state, analytics)
-output/
-*.xlsx
-!data/*.xlsx
-
 # State tracking files
 state.json
 progress.json
+README.md.backup
+
+# Log files
+log/*.log
+log/*.jsonl
+log/*.json
+!log/.gitkeep
+
+# Test output
+test_*.py
+*_test.py
