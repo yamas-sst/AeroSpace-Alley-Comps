@@ -377,7 +377,114 @@ def safe_api_request(params, company):
 # TOTAL: ~185 keywords (expanded from original 80)
 # LAST UPDATED: October 2025
 
-SKILLED_TRADES_KEYWORDS = [
+# ======================================================
+# SMART KEYWORD MATCHING - WORD-BASED APPROACH
+# ======================================================
+# Instead of hardcoding 185+ keyword variants, we use core trade words
+# and check if job titles CONTAIN these words (word boundaries).
+#
+# ADVANTAGES:
+# - "engineer" matches: "Manufacturing Engineer", "Mfg Engineer", "Process Engineer"
+# - "technician" matches: "Electronics Technician", "Electronic Technician", "Eng Technician"
+# - "machinist" matches: "CNC Machinist", "Manual Machinist", "Production Machinist"
+# - Much easier to maintain (40 words vs 185+ hardcoded strings)
+#
+# EXCLUSIONS: Filter out unwanted roles even if they contain trade words
+# - "Software Engineer" (has "engineer" but excluded)
+# - "IT Supervisor" (has "supervisor" but excluded)
+
+CORE_TRADE_WORDS = [
+    # Machining & Fabrication
+    "machinist", "cnc", "mill", "lathe", "fabricator", "welder", "toolmaker",
+
+    # Assembly & Production
+    "assembler", "assembly", "operator", "production",
+
+    # Maintenance & Mechanical
+    "mechanic", "millwright", "maintenance", "repair",
+
+    # Electrical & Controls
+    "electrician", "electrical", "electronics", "electronic", "controls",
+
+    # Plumbing & HVAC
+    "plumber", "pipefitter", "hvac", "boiler", "refrigeration",
+
+    # Inspection & Quality
+    "inspector", "inspection", "quality", "metrology", "ndt", "cmm",
+
+    # Technical Roles
+    "technician", "tech",
+
+    # Engineering & Technical Leadership
+    "engineer", "engineering", "supervisor", "foreman", "superintendent", "lead",
+
+    # Programming & Planning
+    "programmer", "planner", "coordinator",
+]
+
+EXCLUSION_PATTERNS = [
+    # Software/IT roles
+    "software", "it ", "information technology", "network", "cyber", "data",
+    "service desk", "help desk", "desktop", "systems admin",
+
+    # Business/Admin roles
+    "sales", "marketing", "hr", "human resources", "accounting", "finance",
+    "office", "administrative", "admin", "receptionist",
+    "business office", "business development",
+
+    # Design/Architecture (not manufacturing)
+    "architect", "graphic", "ui/ux", "product design",
+
+    # Management (unless combined with technical)
+    "vp ", "vice president", "director", "president", "ceo", "cfo", "cto",
+
+    # Internships/Entry-level training (optional filter - comment out to include)
+    # "intern", "co-op", "trainee", "apprentice",
+
+    # Medical/Facilities (unless trade-specific)
+    "nurse", "doctor", "medical", "clinical", "janitorial", "custodian",
+
+    # Non-manufacturing roles
+    "field service rep", "operations excellence",
+]
+
+def is_skilled_trade_job(job_title):
+    """
+    Smart matching: checks if job title contains core trade words.
+
+    Returns True if:
+    - Title contains at least one CORE_TRADE_WORD
+    - AND title does NOT contain EXCLUSION_PATTERNS
+
+    Examples:
+        ✅ "Manufacturing Engineer" → True (has "engineer")
+        ✅ "Mfg Engineer" → True (has "engineer")
+        ✅ "Process Engineer Sr" → True (has "engineer")
+        ✅ "Production Supervisor" → True (has "supervisor")
+        ✅ "Electronic Technician" → True (has "technician")
+        ✅ "Electronics Technician" → True (has "technician")
+        ✅ "CNC Machinist" → True (has "machinist")
+        ✅ "A&P Mechanic" → True (has "mechanic")
+        ❌ "Software Engineer" → False (excluded: "software")
+        ❌ "IT Supervisor" → False (excluded: "it")
+        ❌ "Sales Coordinator" → False (excluded: "sales")
+    """
+    title_lower = job_title.lower()
+
+    # Check exclusions first (faster to reject early)
+    for exclusion in EXCLUSION_PATTERNS:
+        if exclusion in title_lower:
+            return False
+
+    # Check if any core trade word is present
+    for word in CORE_TRADE_WORDS:
+        if word in title_lower:
+            return True
+
+    return False
+
+# LEGACY: Keep old keyword list for reference/fallback
+SKILLED_TRADES_KEYWORDS_LEGACY = [
     # ==========================================
     # CATEGORY 1: HANDS-ON SKILLED TRADES
     # ==========================================
@@ -869,8 +976,8 @@ def fetch_jobs_for_company(company):
                 continue  # Skip job from different company
 
             # VALIDATION 2: Only keep jobs with skilled trades keywords in title
-            # This removes management, engineering, software roles, etc.
-            matched = any(kw.lower() in title.lower() for kw in SKILLED_TRADES_KEYWORDS)
+            # Uses smart word-based matching (see is_skilled_trade_job function)
+            matched = is_skilled_trade_job(title)
 
             # DEBUG: Show all job titles (matched and rejected)
             if matched:
