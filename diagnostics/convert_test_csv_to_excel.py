@@ -5,7 +5,7 @@ Convert Test_Max25_9Companies.csv to Excel format
 Run this script locally to create the Excel file needed for testing.
 
 Usage:
-    python data/convert_test_csv_to_excel.py
+    python diagnostics/convert_test_csv_to_excel.py
 """
 
 import pandas as pd
@@ -14,17 +14,17 @@ import os
 def convert_csv_to_excel():
     """Convert CSV test file to Excel format."""
 
-    # Use relative paths from docs/testing/ directory
+    # Use relative paths from diagnostics/ directory
     csv_path = 'Test_Max25_9Companies.csv'
     excel_path = 'Test_Max25_9Companies.xlsx'
 
     print("🔄 Converting CSV to Excel format...")
-    print(f"   Input:  docs/testing/{csv_path}")
-    print(f"   Output: docs/testing/{excel_path}")
+    print(f"   Input:  diagnostics/{csv_path}")
+    print(f"   Output: diagnostics/{excel_path}")
 
     # Check if CSV exists
     if not os.path.exists(csv_path):
-        print(f"\n❌ Error: {csv_path} not found in docs/testing/!")
+        print(f"\n❌ Error: {csv_path} not found in diagnostics/!")
         return False
 
     # Read CSV

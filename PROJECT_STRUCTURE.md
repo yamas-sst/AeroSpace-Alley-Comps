@@ -25,20 +25,17 @@ AeroSpace-Alley-Comps/
 │   ├── config.json                  # API keys & settings (GITIGNORED - not committed)
 │   └── config_test_max25.json       # Test configuration (25 API calls max)
 │
-├── diagnostics/                     # Diagnostic tools (troubleshooting)
+├── diagnostics/                     # Diagnostic & test tools
 │   ├── check_block_status.py        # Check if IP blocked by SerpAPI
 │   ├── quick_check.py               # Quick API connectivity test
-│   └── setup_check.py               # Comprehensive setup validation
-│
-├── docs/                            # Documentation
-│   └── testing/                     # Test documentation & files
-│       ├── TEST_SETUP_GUIDE.md          # Step-by-step test instructions
-│       ├── TEST_25_STRATEGIC.md         # 25-company test strategy
-│       ├── TEST_CONFIGURATION_4TIER.md  # 4-tier test configuration
-│       ├── TEST_MAX_25_CALLS.md         # 9-company test (25 API calls)
-│       ├── Test_3_Companies.xlsx        # 3-company quick test file
-│       ├── Test_Max25_9Companies.csv    # 9-company test CSV
-│       └── convert_test_csv_to_excel.py # CSV→Excel converter
+│   ├── setup_check.py               # Comprehensive setup validation
+│   ├── TEST_SETUP_GUIDE.md          # Step-by-step test instructions
+│   ├── TEST_25_STRATEGIC.md         # 25-company test strategy
+│   ├── TEST_CONFIGURATION_4TIER.md  # 4-tier test configuration
+│   ├── TEST_MAX_25_CALLS.md         # 9-company test (25 API calls)
+│   ├── Test_3_Companies.xlsx        # 3-company quick test file
+│   ├── Test_Max25_9Companies.csv    # 9-company test CSV
+│   └── convert_test_csv_to_excel.py # CSV→Excel converter
 │
 ├── future/                          # Future development planning
 │   ├── COMPANY_SIZE_LOOKUP_IMPLEMENTATION.md   # Company size database docs

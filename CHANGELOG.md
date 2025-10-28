@@ -80,7 +80,7 @@ All notable changes to this project are documented in this file.
 #### Enhanced Documentation
 - `PROJECT_STRUCTURE.md`: Complete architecture documentation
 - `CHANGELOG.md`: This file - comprehensive change log
-- Reorganized test docs into `docs/testing/` folder
+- Consolidated test docs into `diagnostics/` folder
 
 ---
 
@@ -97,7 +97,7 @@ AeroSpace-Alley-Comps/
 
 AFTER:
 AeroSpace-Alley-Comps/
-├── docs/testing/ (all test files organized)
+├── diagnostics/ (all diagnostic & test files organized)
 ├── data/ (production data only)
 ├── log/.gitkeep (clean, logs gitignored)
 └── PROJECT_STRUCTURE.md (comprehensive docs)
@@ -105,15 +105,15 @@ AeroSpace-Alley-Comps/
 
 **Changes:**
 - ✅ Removed `__pycache__/` and `README.md.backup`
-- ✅ Created `docs/testing/` for all test files
-- ✅ Moved `TEST_*.md` files to `docs/testing/`
-- ✅ Moved test data files to `docs/testing/`
+- ✅ Consolidated all test files into `diagnostics/` folder
+- ✅ Moved `TEST_*.md` files to `diagnostics/`
+- ✅ Moved test data files to `diagnostics/`
 - ✅ Cleaned up old log files (`test_run.log`, `tier1_test_run.log`, `block_diagnostic.json`)
 - ✅ Updated `.gitignore` for production (logs, test files, backups)
 - ✅ Created `log/.gitkeep` to preserve directory structure
 
 #### Configuration Updates
-- Updated `config_test_max25.json` to point to `docs/testing/Test_Max25_9Companies.xlsx`
+- Updated `config_test_max25.json` to point to `diagnostics/Test_Max25_9Companies.xlsx`
 - Fixed paths in `convert_test_csv_to_excel.py` for new location
 - All configs now use correct relative paths
 
@@ -148,7 +148,7 @@ If upgrading from version 1.x:
    - **Impact:** Automatic variant matching (better coverage)
    - **Action:** No action needed - transparent improvement
 
-3. **File Structure Changed:** Test files moved to `docs/testing/`
+3. **File Structure Changed:** Test files moved to `diagnostics/`
    - **Impact:** Test config paths updated
    - **Action:** Update custom configs if using test files
 
@@ -222,7 +222,7 @@ If upgrading from version 1.x:
 **New Files:**
 - `PROJECT_STRUCTURE.md` - Complete architecture overview
 - `CHANGELOG.md` - This file
-- `docs/testing/TEST_SETUP_GUIDE.md` - Test instructions (reorganized)
+- `diagnostics/TEST_SETUP_GUIDE.md` - Test instructions (reorganized)
 
 **Updated Files:**
 - `README.md` - Updated with new features
