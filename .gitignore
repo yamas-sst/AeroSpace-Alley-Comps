@@ -53,3 +53,4 @@ output/
 # State tracking files
 state.json
 progress.json
+README.md.backup
