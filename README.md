@@ -90,7 +90,7 @@ Edit `resources/config.json`:
 ### Step 3: Verify Setup
 
 ```bash
-python setup_check.py
+python diagnostics/setup_check.py
 ```
 
 Expected: All green ✅ checkmarks
@@ -211,7 +211,7 @@ Skilled Trades Filter → Excel Export → Analytics
 
 **Check API Access:**
 ```bash
-python quick_check.py
+python diagnostics/quick_check.py
 ```
 
 **View Audit Log:**
@@ -249,9 +249,10 @@ AeroSpace-Alley-Comps/
 ├── log/                         # Logs (auto-created)
 │   └── api_audit.jsonl
 │
-├── setup_check.py               # Verify installation
-├── quick_check.py               # Test API access
-└── check_block_status.py        # Diagnostic tool
+├── diagnostics/                 # Diagnostic tools
+│   ├── setup_check.py           # Verify installation
+│   ├── quick_check.py           # Test API access
+│   └── check_block_status.py    # Comprehensive diagnostics
 ```
 
 ---
@@ -349,7 +350,7 @@ python AeroComps.py
 **Fixes:**
 ```bash
 # Test your API key at serpapi.com
-python quick_check.py
+python diagnostics/quick_check.py
 
 # If blocked: Wait 24-48 hours or try different network
 # If invalid: Get new key at serpapi.com/manage-api-key
@@ -388,7 +389,7 @@ python AeroComps.py
 
 **What to do:**
 1. Wait 10 minutes
-2. Check if API key valid: `python quick_check.py`
+2. Check if API key valid: `python diagnostics/quick_check.py`
 3. Run again
 
 ### Dependencies Won't Install
@@ -639,8 +640,8 @@ Company Processing:
 ### For Technical Issues
 
 **Before asking:**
-1. Run `python setup_check.py` - fix any ❌ errors
-2. Run `python quick_check.py` - verify API access
+1. Run `python diagnostics/setup_check.py` - fix any ❌ errors
+2. Run `python diagnostics/quick_check.py` - verify API access
 3. Check `log/api_audit.jsonl` for specific errors
 4. Review "Troubleshooting" section above
 
@@ -654,8 +655,8 @@ Company Processing:
 
 When reporting issues, include:
 - Error message (full traceback)
-- Output of `python setup_check.py`
-- Output of `python quick_check.py`
+- Output of `python diagnostics/setup_check.py`
+- Output of `python diagnostics/quick_check.py`
 - Last 10 lines of `log/api_audit.jsonl`
 - Python version: `python --version`
 
