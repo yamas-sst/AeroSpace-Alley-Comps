@@ -419,7 +419,7 @@ CORE_TRADE_WORDS = [
     "engineer", "engineering", "supervisor", "foreman", "superintendent", "lead",
 
     # Programming & Planning
-    "programmer", "planner", "coordinator",
+    "programmer", "planner",  # Removed "coordinator" - conflicts with exclusions
 ]
 
 EXCLUSION_PATTERNS = [
@@ -429,17 +429,17 @@ EXCLUSION_PATTERNS = [
 
     # Business/Admin roles
     "sales", "marketing", "hr", "human resources", "accounting", "finance",
-    "office", "administrative", "admin", "receptionist",
+    "office", "administrative", "admin", "receptionist", "coordinator",
     "business office", "business development",
 
     # Design/Architecture (not manufacturing)
-    "architect", "graphic", "ui/ux", "product design",
+    "architect", "graphic", "ui/ux", "product design", "design engineer",
 
     # Management (unless combined with technical)
     "vp ", "vice president", "director", "president", "ceo", "cfo", "cto",
 
-    # Internships/Entry-level training (optional filter - comment out to include)
-    # "intern", "co-op", "trainee", "apprentice",
+    # Internships/Entry-level training
+    "intern", "co-op",  # Re-enabled to filter out internships
 
     # Medical/Facilities (unless trade-specific)
     "nurse", "doctor", "medical", "clinical", "janitorial", "custodian",
@@ -471,17 +471,20 @@ def is_skilled_trade_job(job_title):
     """
     title_lower = job_title.lower()
 
-    # Check exclusions first (faster to reject early)
+    # DEBUG: Check exclusions first
     for exclusion in EXCLUSION_PATTERNS:
         if exclusion in title_lower:
+            print(f"      DEBUG: Excluded by pattern '{exclusion}'")
             return False
 
-    # Check if any core trade word is present
-    for word in CORE_TRADE_WORDS:
-        if word in title_lower:
-            return True
-
-    return False
+    # DEBUG: Check if any core trade word is present
+    matched_words = [word for word in CORE_TRADE_WORDS if word in title_lower]
+    if matched_words:
+        print(f"      DEBUG: Matched words: {matched_words}")
+        return True
+    else:
+        print(f"      DEBUG: No core trade words found")
+        return False
 
 # LEGACY: Keep old keyword list for reference/fallback
 SKILLED_TRADES_KEYWORDS_LEGACY = [
