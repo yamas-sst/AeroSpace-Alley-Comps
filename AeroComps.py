@@ -722,6 +722,10 @@ def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH):
     # Keep alphanumeric, ampersands (&), and spaces
     clean_name = re.sub(r"[^a-zA-Z0-9&\s]", "", company_name).strip()
 
+    # Replace ampersands with "and" for better Google Jobs API compatibility
+    # Google Jobs API has issues parsing queries with & symbols
+    clean_name = clean_name.replace("&", "and")
+
     # SIMPLE: Just return company name
     # Google Jobs will find all positions at this company
     # We filter for skilled trades in post-processing
