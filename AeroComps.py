@@ -434,6 +434,7 @@ EXCLUSION_PATTERNS = [
 
     # Design/Architecture (not manufacturing)
     "architect", "graphic", "ui/ux", "product design", "design engineer",
+    "- design", "design tech", "designer",  # Catches "Engineer - Design", "Design Technician"
 
     # Management (must have word boundaries to avoid false matches like 'inspector')
     " vp ", "vice president", " director", " president", " ceo ", " cfo ", " cto ",
