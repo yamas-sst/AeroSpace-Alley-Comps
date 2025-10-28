@@ -435,8 +435,8 @@ EXCLUSION_PATTERNS = [
     # Design/Architecture (not manufacturing)
     "architect", "graphic", "ui/ux", "product design", "design engineer",
 
-    # Management (unless combined with technical)
-    "vp ", "vice president", "director", "president", "ceo", "cfo", "cto",
+    # Management (must have word boundaries to avoid false matches like 'inspector')
+    " vp ", "vice president", " director", " president", " ceo ", " cfo ", " cto ",
 
     # Internships/Entry-level training
     "intern", "co-op",  # Re-enabled to filter out internships
@@ -471,20 +471,17 @@ def is_skilled_trade_job(job_title):
     """
     title_lower = job_title.lower()
 
-    # DEBUG: Check exclusions first
+    # Check exclusions first (faster to reject early)
     for exclusion in EXCLUSION_PATTERNS:
         if exclusion in title_lower:
-            print(f"      DEBUG: Excluded by pattern '{exclusion}'")
             return False
 
-    # DEBUG: Check if any core trade word is present
-    matched_words = [word for word in CORE_TRADE_WORDS if word in title_lower]
-    if matched_words:
-        print(f"      DEBUG: Matched words: {matched_words}")
-        return True
-    else:
-        print(f"      DEBUG: No core trade words found")
-        return False
+    # Check if any core trade word is present
+    for word in CORE_TRADE_WORDS:
+        if word in title_lower:
+            return True
+
+    return False
 
 # LEGACY: Keep old keyword list for reference/fallback
 SKILLED_TRADES_KEYWORDS_LEGACY = [
@@ -980,15 +977,7 @@ def fetch_jobs_for_company(company):
 
             # VALIDATION 2: Only keep jobs with skilled trades keywords in title
             # Uses smart word-based matching (see is_skilled_trade_job function)
-            matched = is_skilled_trade_job(title)
-
-            # DEBUG: Show all job titles (matched and rejected)
-            if matched:
-                print(f"   ✅ MATCHED: {title}")
-            else:
-                print(f"   ❌ REJECTED: {title}")
-
-            if matched:
+            if is_skilled_trade_job(title):
                 local_results.append({
                     "Company": company,
                     "Job Title": title,
