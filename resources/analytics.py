@@ -285,18 +285,27 @@ class JobAnalytics:
 
         tracking_df = pd.DataFrame(self.company_tracking)
 
+        # Convert Employee Count to numeric, handling "Unknown" values
+        tracking_df['Employee Count Numeric'] = pd.to_numeric(tracking_df['Employee Count'], errors='coerce')
+
         tier_analysis = tracking_df.groupby('Tier').agg({
             'Company': 'count',  # Total companies
             'Success': 'sum',  # Successful companies
             'Jobs Found': 'sum',  # Total jobs
             'Job Cap': 'first',  # Job cap for this tier
-            'Employee Count': 'mean'  # Average employees
+            'Employee Count Numeric': 'mean'  # Average employees (numeric only)
         }).reset_index()
 
         tier_analysis.columns = ['Tier', 'Companies Attempted', 'Companies Successful', 'Total Jobs', 'Job Cap', 'Avg Employees']
         tier_analysis['Success Rate'] = (tier_analysis['Companies Successful'] / tier_analysis['Companies Attempted'] * 100).round(1).astype(str) + '%'
         tier_analysis['Avg Jobs per Company'] = (tier_analysis['Total Jobs'] / tier_analysis['Companies Successful']).round(1)
-        tier_analysis['Avg Employees'] = tier_analysis['Avg Employees'].round(0).astype(int)
+
+        # Handle Avg Employees: show "Unknown" for Tier 99, round for others
+        tier_analysis['Avg Employees'] = tier_analysis.apply(
+            lambda row: 'Unknown' if row['Tier'] == 99 or pd.isna(row['Avg Employees'])
+            else int(round(row['Avg Employees'])),
+            axis=1
+        )
 
         # Reorder columns
         tier_analysis = tier_analysis[['Tier', 'Companies Attempted', 'Companies Successful', 'Success Rate',
