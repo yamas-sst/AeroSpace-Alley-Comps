@@ -215,7 +215,11 @@ def validate_api_response(response, company):
 
     # Check for API error field
     if "error" in data:
-        return False, None, f"API Error: {data['error']}"
+        error_msg = str(data['error'])
+        # "No results" is valid - allows fallback retry logic
+        if "no results" in error_msg.lower() or "hasn't returned any results" in error_msg.lower():
+            return True, {"jobs_results": [], "search_metadata": {"status": "Success"}}, None
+        return False, None, f"API Error: {error_msg}"
 
     # Validate required fields
     if "search_metadata" not in data:
@@ -885,6 +889,7 @@ def fetch_jobs_for_company(company):
 
     local_results = []  # Store jobs for this company only
     query = build_trade_query(company)
+    tried_without_hyphens = False  # Simple fallback flag
 
     # Adaptive pagination based on company size
     # Get company-specific job cap
@@ -959,11 +964,19 @@ def fetch_jobs_for_company(company):
 
         job_results = data.get("jobs_results", [])
 
-        # Optimization: If first page has no results, skip remaining pages
-        # (Company likely has no job postings at all)
+        # Simple fallback: If first page has no results, try without hyphens once
         if not job_results:
-            if start == 0:  # Only stop if first page is empty
-                print(f"[{company}] No jobs found — skipping remaining pages.")
+            if start == 0:  # Only check on first page
+                if not tried_without_hyphens and "-" in company:
+                    # Try query without hyphens (e.g., "Accu-Rite" → "AccuRite")
+                    print(f"[{company}] No results — trying without hyphens...")
+                    tried_without_hyphens = True
+                    query = build_trade_query(company, remove_hyphens=True)
+                    continue  # Retry from start
+                else:
+                    print(f"[{company}] No jobs found — skipping remaining pages.")
+                    break
+            else:
                 break
 
         # Process each job listing
