@@ -1,0 +1,27 @@
+{
+  "api_keys": [
+    {
+      "label": "New-Oct27",
+      "key": "801d79de5fa4d16e67d77c3b0cf1d2090a394d0f52df23aebd5deecf9d653cc4",
+      "limit": 250,
+      "priority": 1,
+      "notes": "Created Oct 27 2025"
+    },
+    {
+      "label": "Primary-Yamas",
+      "key": "4aa81d243250039b571ae3b331214224e0f253369166f54273fa553355c9eaf7",
+      "limit": 250,
+      "priority": 2,
+      "notes": "Primary API key"
+    }
+  ],
+  "settings": {
+    "testing_mode": true,
+    "testing_company_limit": 3,
+    "input_file": "diagnostics/Test_3_Companies.xlsx",
+    "output_file": "output/Test_3_Companies_Results.xlsx",
+    "max_api_calls_per_key": 250,
+    "min_interval_seconds": 1.2,
+    "max_threads": 5
+  }
+}
