@@ -357,6 +357,7 @@ class JobAnalytics:
             "Tier 3 Success Rate": self._tier_success_rate(tracking_df, 3),
             "Tier 4 Success Rate": self._tier_success_rate(tracking_df, 4),
             "Tier 5 Success Rate": self._tier_success_rate(tracking_df, 5),
+            "Tier 99 Success Rate (Unknown Size)": self._tier_success_rate(tracking_df, 99),
         }
 
     def _tier_success_rate(self, tracking_df: pd.DataFrame, tier: int) -> str:
