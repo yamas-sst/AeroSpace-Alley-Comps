@@ -250,9 +250,10 @@ def validate_company_match(target_company, api_company, threshold=0.65):
 
     from difflib import SequenceMatcher
 
-    # Normalize names (lowercase, remove special chars)
-    target_clean = re.sub(r'[^a-z0-9\s]', '', target_company.lower())
-    api_clean = re.sub(r'[^a-z0-9\s]', '', api_company.lower())
+    # Normalize names (lowercase, remove special chars, preserve hyphens)
+    # PRESERVES HYPHENS: Ensures "Accu-Rite" matches "Accu-Rite" but not "AccuRite"
+    target_clean = re.sub(r'[^a-z0-9\s-]', '', target_company.lower())
+    api_clean = re.sub(r'[^a-z0-9\s-]', '', api_company.lower())
 
     # Calculate similarity
     similarity = SequenceMatcher(None, target_clean, api_clean).ratio()
@@ -825,8 +826,9 @@ def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH):
         str: Simple company name query
     """
     # Remove special characters that could interfere with search
-    # Keep alphanumeric, ampersands (&), and spaces
-    clean_name = re.sub(r"[^a-zA-Z0-9&\s]", "", company_name).strip()
+    # Keep alphanumeric, ampersands (&), hyphens (-), and spaces
+    # PRESERVES HYPHENS: Critical for companies like "Accu-Rite", "Curtiss-Wright"
+    clean_name = re.sub(r"[^a-zA-Z0-9&\s-]", "", company_name).strip()
 
     # Replace ampersands with space for better Google Jobs API compatibility
     # Google Jobs API has issues with & symbol and "and" connector
