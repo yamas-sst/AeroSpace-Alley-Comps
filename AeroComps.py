@@ -807,7 +807,7 @@ company_tracking = []  # ADDED: Track all companies attempted (for analytics)
 # RETURNS:
 #   str: Optimized search query string
 
-def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH):
+def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH, remove_hyphens=False):
     """
     Builds job search query for Google Jobs API.
 
@@ -826,14 +826,18 @@ def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH):
         company_name (str): Company name to search
         keywords (list): IGNORED - kept for backward compatibility
         max_length (int): IGNORED - kept for backward compatibility
+        remove_hyphens (bool): If True, remove hyphens from company name (fallback)
 
     RETURNS:
         str: Simple company name query
     """
     # Remove special characters that could interfere with search
-    # Keep alphanumeric, ampersands (&), hyphens (-), and spaces
-    # PRESERVES HYPHENS: Critical for companies like "Accu-Rite", "Curtiss-Wright"
-    clean_name = re.sub(r"[^a-zA-Z0-9&\s-]", "", company_name).strip()
+    if remove_hyphens:
+        # Fallback: Remove hyphens (e.g., "Accu-Rite" → "AccuRite")
+        clean_name = re.sub(r"[^a-zA-Z0-9&\s]", "", company_name).strip()
+    else:
+        # Default: Keep hyphens (critical for companies like "Accu-Rite", "Curtiss-Wright")
+        clean_name = re.sub(r"[^a-zA-Z0-9&\s-]", "", company_name).strip()
 
     # Replace ampersands with space for better Google Jobs API compatibility
     # Google Jobs API has issues with & symbol and "and" connector
