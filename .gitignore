@@ -42,8 +42,6 @@ Thumbs.db
 ~$*.xlsx
 ~$*.xls
 
-# Configuration with secrets (DO NOT COMMIT)
-resources/config.json
 
 # State tracking files
 state.json
