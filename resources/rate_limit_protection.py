@@ -427,8 +427,8 @@ class IntelligentBatchProcessor:
     def __init__(
         self,
         batch_size: int = 10,
-        min_pause: int = 120,
-        max_pause: int = 300
+        min_pause: int = 45,
+        max_pause: int = 45
     ):
         """
         Initialize batch processor
@@ -450,25 +450,13 @@ class IntelligentBatchProcessor:
 
     def calculate_pause(self) -> float:
         """
-        Calculate intelligent pause duration
-
-        Simulates human fatigue:
-        - Early batches: shorter pauses
-        - Later batches: longer pauses (fatigue)
-        - Random variation (15-30%)
+        Calculate pause duration
 
         Returns:
-            Pause duration (seconds)
+            Pause duration (seconds) - fixed at min_pause
         """
-        # Base pause increases with batches processed (fatigue)
-        fatigue_factor = 1.0 + (self.batches_processed * 0.1)
-        base_pause = min(self.min_pause * fatigue_factor, self.max_pause)
-
-        # Add random jitter (15-30% variation)
-        jitter_pct = random.uniform(0.15, 0.30)
-        jitter = base_pause * jitter_pct
-
-        return base_pause + jitter
+        # Return exactly the configured pause duration (no fatigue, no jitter)
+        return self.min_pause
 
     def process_in_batches(
         self,
@@ -902,8 +890,8 @@ class RateLimitProtectionCoordinator:
 
         self.batch_processor = IntelligentBatchProcessor(
             batch_size=10,
-            min_pause=120,
-            max_pause=300
+            min_pause=45,
+            max_pause=45
         )
 
         self.audit_logger = ComprehensiveAuditLogger(

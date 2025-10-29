@@ -215,7 +215,11 @@ def validate_api_response(response, company):
 
     # Check for API error field
     if "error" in data:
-        return False, None, f"API Error: {data['error']}"
+        error_msg = str(data['error'])
+        # "No results" is valid - allows fallback retry logic
+        if "no results" in error_msg.lower() or "hasn't returned any results" in error_msg.lower():
+            return True, {"jobs_results": [], "search_metadata": {"status": "Success"}}, None
+        return False, None, f"API Error: {error_msg}"
 
     # Validate required fields
     if "search_metadata" not in data:
@@ -250,9 +254,10 @@ def validate_company_match(target_company, api_company, threshold=0.65):
 
     from difflib import SequenceMatcher
 
-    # Normalize names (lowercase, remove special chars)
-    target_clean = re.sub(r'[^a-z0-9\s]', '', target_company.lower())
-    api_clean = re.sub(r'[^a-z0-9\s]', '', api_company.lower())
+    # Normalize names (lowercase, remove special chars, preserve hyphens)
+    # PRESERVES HYPHENS: Ensures "Accu-Rite" matches "Accu-Rite" but not "AccuRite"
+    target_clean = re.sub(r'[^a-z0-9\s-]', '', target_company.lower())
+    api_clean = re.sub(r'[^a-z0-9\s-]', '', api_company.lower())
 
     # Calculate similarity
     similarity = SequenceMatcher(None, target_clean, api_clean).ratio()
@@ -772,6 +777,7 @@ else:
     print(f"📊 Loaded {total_companies} companies to process")
 
 results = []  # Will store all job listings across all companies
+company_tracking = []  # ADDED: Track all companies attempted (for analytics)
 
 
 # ======================================================
@@ -801,7 +807,7 @@ results = []  # Will store all job listings across all companies
 # RETURNS:
 #   str: Optimized search query string
 
-def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH):
+def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH, remove_hyphens=False):
     """
     Builds job search query for Google Jobs API.
 
@@ -820,13 +826,18 @@ def build_trade_query(company_name, keywords=None, max_length=MAX_QUERY_LENGTH):
         company_name (str): Company name to search
         keywords (list): IGNORED - kept for backward compatibility
         max_length (int): IGNORED - kept for backward compatibility
+        remove_hyphens (bool): If True, remove hyphens from company name (fallback)
 
     RETURNS:
         str: Simple company name query
     """
     # Remove special characters that could interfere with search
-    # Keep alphanumeric, ampersands (&), and spaces
-    clean_name = re.sub(r"[^a-zA-Z0-9&\s]", "", company_name).strip()
+    if remove_hyphens:
+        # Fallback: Remove hyphens (e.g., "Accu-Rite" → "AccuRite")
+        clean_name = re.sub(r"[^a-zA-Z0-9&\s]", "", company_name).strip()
+    else:
+        # Default: Keep hyphens (critical for companies like "Accu-Rite", "Curtiss-Wright")
+        clean_name = re.sub(r"[^a-zA-Z0-9&\s-]", "", company_name).strip()
 
     # Replace ampersands with space for better Google Jobs API compatibility
     # Google Jobs API has issues with & symbol and "and" connector
@@ -882,6 +893,7 @@ def fetch_jobs_for_company(company):
 
     local_results = []  # Store jobs for this company only
     query = build_trade_query(company)
+    tried_without_hyphens = False  # Simple fallback flag
 
     # Adaptive pagination based on company size
     # Get company-specific job cap
@@ -956,11 +968,19 @@ def fetch_jobs_for_company(company):
 
         job_results = data.get("jobs_results", [])
 
-        # Optimization: If first page has no results, skip remaining pages
-        # (Company likely has no job postings at all)
+        # Simple fallback: If first page has no results, try without hyphens once
         if not job_results:
-            if start == 0:  # Only stop if first page is empty
-                print(f"[{company}] No jobs found — skipping remaining pages.")
+            if start == 0:  # Only check on first page
+                if not tried_without_hyphens and "-" in company:
+                    # Try query without hyphens (e.g., "Accu-Rite" → "AccuRite")
+                    print(f"[{company}] No results — trying without hyphens...")
+                    tried_without_hyphens = True
+                    query = build_trade_query(company, remove_hyphens=True)
+                    continue  # Retry from start
+                else:
+                    print(f"[{company}] No jobs found — skipping remaining pages.")
+                    break
+            else:
                 break
 
         # Process each job listing
@@ -978,6 +998,9 @@ def fetch_jobs_for_company(company):
             if is_skilled_trade_job(title):
                 local_results.append({
                     "Company": company,
+                    "Company Tier": tier,  # ADDED: Company size tier (1-5)
+                    "Employee Count": company_size_lookup(company),  # ADDED: Approximate employees
+                    "Job Cap": MAX_JOBS,  # ADDED: Max jobs for this tier
                     "Job Title": title,
                     "Location": job.get("location", ""),
                     "Via": job.get("via", ""),  # Job board source (Indeed, LinkedIn, etc.)
@@ -1008,6 +1031,18 @@ def fetch_jobs_for_company(company):
     )
 
     print(f"[{company}] → {len(local_results)} skilled-trade jobs found")
+
+    # ADDED: Track company-level metrics for analytics
+    global company_tracking
+    company_tracking.append({
+        "Company": company,
+        "Tier": tier,
+        "Employee Count": company_size_lookup(company),
+        "Job Cap": MAX_JOBS,
+        "Jobs Found": len(local_results),
+        "Success": len(local_results) > 0
+    })
+
     return local_results
 
 
@@ -1128,7 +1163,7 @@ if results:
         from resources.analytics import JobAnalytics
 
         analytics_output = OUTPUT_FILE.replace(".xlsx", "_Analytics.xlsx")
-        analytics = JobAnalytics(final_df)
+        analytics = JobAnalytics(final_df, company_tracking)  # ADDED: Pass company tracking data
         analytics.generate_report(analytics_output)
 
     except ImportError:

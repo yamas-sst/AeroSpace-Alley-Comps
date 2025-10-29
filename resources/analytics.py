@@ -27,7 +27,7 @@ class JobAnalytics:
     Analyzes job scraping results to provide hiring insights and trends.
     """
 
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, df: pd.DataFrame, company_tracking: List[Dict] = None):
         """
         Initialize analytics with job results DataFrame.
 
@@ -35,8 +35,10 @@ class JobAnalytics:
             df (pd.DataFrame): Job results with columns:
                 - Company, Job Title, Location, Via, Source URL,
                   Description Snippet, Timestamp
+            company_tracking (List[Dict], optional): ADDED - Company-level metrics for tier analysis
         """
         self.df = df
+        self.company_tracking = company_tracking if company_tracking else []  # ADDED
         self.trade_keywords = self._load_trade_keywords()
 
     def _load_trade_keywords(self) -> List[str]:
@@ -267,6 +269,99 @@ class JobAnalytics:
             "Companies with 1 Job": len(self.df.groupby("Company").size()[lambda x: x == 1]),
         }
 
+    # ======================================================
+    # ADDED: NEW TIER ANALYSIS METHODS
+    # ======================================================
+
+    def analyze_by_tier(self) -> pd.DataFrame:
+        """
+        ADDED: Analyze companies and jobs by tier.
+
+        Returns:
+            pd.DataFrame: Tier-level breakdown with success rates
+        """
+        if not self.company_tracking:
+            return pd.DataFrame()  # Return empty if no tracking data
+
+        tracking_df = pd.DataFrame(self.company_tracking)
+
+        tier_analysis = tracking_df.groupby('Tier').agg({
+            'Company': 'count',  # Total companies
+            'Success': 'sum',  # Successful companies
+            'Jobs Found': 'sum',  # Total jobs
+            'Job Cap': 'first',  # Job cap for this tier
+            'Employee Count': 'mean'  # Average employees
+        }).reset_index()
+
+        tier_analysis.columns = ['Tier', 'Companies Attempted', 'Companies Successful', 'Total Jobs', 'Job Cap', 'Avg Employees']
+        tier_analysis['Success Rate'] = (tier_analysis['Companies Successful'] / tier_analysis['Companies Attempted'] * 100).round(1).astype(str) + '%'
+        tier_analysis['Avg Jobs per Company'] = (tier_analysis['Total Jobs'] / tier_analysis['Companies Successful']).round(1)
+        tier_analysis['Avg Employees'] = tier_analysis['Avg Employees'].round(0).astype(int)
+
+        # Reorder columns
+        tier_analysis = tier_analysis[['Tier', 'Companies Attempted', 'Companies Successful', 'Success Rate',
+                                       'Total Jobs', 'Avg Jobs per Company', 'Job Cap', 'Avg Employees']]
+
+        return tier_analysis.sort_values('Tier')
+
+    def analyze_failed_companies(self) -> pd.DataFrame:
+        """
+        ADDED: Identify companies that returned no jobs.
+
+        Returns:
+            pd.DataFrame: Failed companies with tier info
+        """
+        if not self.company_tracking:
+            return pd.DataFrame()
+
+        tracking_df = pd.DataFrame(self.company_tracking)
+        failed = tracking_df[tracking_df['Success'] == False].copy()
+
+        failed = failed[['Company', 'Tier', 'Employee Count', 'Job Cap', 'Jobs Found']]
+        failed = failed.sort_values('Tier')
+
+        return failed
+
+    def analyze_success_by_tier(self) -> Dict[str, any]:
+        """
+        ADDED: Generate tier-focused summary statistics.
+
+        Returns:
+            dict: Tier-level success metrics
+        """
+        if not self.company_tracking:
+            return {}
+
+        tracking_df = pd.DataFrame(self.company_tracking)
+
+        total_companies = len(tracking_df)
+        successful_companies = tracking_df['Success'].sum()
+        overall_success_rate = (successful_companies / total_companies * 100) if total_companies > 0 else 0
+
+        return {
+            "Total Companies Attempted": total_companies,
+            "Companies with Jobs Found": successful_companies,
+            "Companies with No Jobs": total_companies - successful_companies,
+            "Overall Success Rate": f"{overall_success_rate:.1f}%",
+            "Tier 1 Success Rate": self._tier_success_rate(tracking_df, 1),
+            "Tier 2 Success Rate": self._tier_success_rate(tracking_df, 2),
+            "Tier 3 Success Rate": self._tier_success_rate(tracking_df, 3),
+            "Tier 4 Success Rate": self._tier_success_rate(tracking_df, 4),
+            "Tier 5 Success Rate": self._tier_success_rate(tracking_df, 5),
+        }
+
+    def _tier_success_rate(self, tracking_df: pd.DataFrame, tier: int) -> str:
+        """Helper to calculate success rate for a specific tier"""
+        tier_data = tracking_df[tracking_df['Tier'] == tier]
+        if len(tier_data) == 0:
+            return "N/A"
+        success_rate = (tier_data['Success'].sum() / len(tier_data) * 100)
+        return f"{success_rate:.1f}%"
+
+    # ======================================================
+    # END OF ADDED TIER ANALYSIS METHODS
+    # ======================================================
+
     def generate_report(self, output_file: str = "job_analytics_report.xlsx"):
         """
         Generate comprehensive analytics report and export to Excel.
@@ -294,6 +389,11 @@ class JobAnalytics:
         job_boards = self.analyze_job_boards()
         trade_by_company = self.analyze_trade_by_company(top_companies=15, top_trades=15)
 
+        # ADDED: Generate tier analytics
+        tier_analysis = self.analyze_by_tier()
+        tier_summary = self.analyze_success_by_tier()
+        failed_companies = self.analyze_failed_companies()
+
         # Print summary to console
         print("📊 SUMMARY STATISTICS")
         print("-" * 60)
@@ -311,6 +411,24 @@ class JobAnalytics:
         print("\n📍 TOP 10 LOCATIONS")
         print("-" * 60)
         print(top_locations.head(10).to_string(index=False))
+
+        # ADDED: Print tier analytics to console
+        if not tier_analysis.empty:
+            print("\n📊 TIER ANALYSIS")
+            print("-" * 60)
+            print(tier_analysis.to_string(index=False))
+
+            print("\n📈 TIER SUCCESS METRICS")
+            print("-" * 60)
+            for key, value in tier_summary.items():
+                print(f"  {key}: {value}")
+
+            if not failed_companies.empty:
+                print(f"\n❌ COMPANIES WITH NO JOBS ({len(failed_companies)} total)")
+                print("-" * 60)
+                print(failed_companies.head(10).to_string(index=False))
+                if len(failed_companies) > 10:
+                    print(f"   ... and {len(failed_companies) - 10} more (see Excel report)")
 
         # Export to Excel with multiple sheets
         with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
@@ -335,6 +453,17 @@ class JobAnalytics:
 
             # Raw data
             self.df.to_excel(writer, sheet_name="Raw Data", index=False)
+
+            # ADDED: New tier analysis sheets
+            if not tier_analysis.empty:
+                tier_analysis.to_excel(writer, sheet_name="Tier Analysis", index=False)
+
+            if tier_summary:
+                tier_summary_df = pd.DataFrame(list(tier_summary.items()), columns=["Metric", "Value"])
+                tier_summary_df.to_excel(writer, sheet_name="Tier Success Metrics", index=False)
+
+            if not failed_companies.empty:
+                failed_companies.to_excel(writer, sheet_name="Failed Companies", index=False)
 
         print(f"\n✅ Analytics report saved to: {output_file}")
         print("="*60 + "\n")
