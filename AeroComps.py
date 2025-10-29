@@ -773,6 +773,7 @@ else:
     print(f"📊 Loaded {total_companies} companies to process")
 
 results = []  # Will store all job listings across all companies
+company_tracking = []  # ADDED: Track all companies attempted (for analytics)
 
 
 # ======================================================
@@ -980,6 +981,9 @@ def fetch_jobs_for_company(company):
             if is_skilled_trade_job(title):
                 local_results.append({
                     "Company": company,
+                    "Company Tier": tier,  # ADDED: Company size tier (1-5)
+                    "Employee Count": company_size_lookup(company),  # ADDED: Approximate employees
+                    "Job Cap": MAX_JOBS,  # ADDED: Max jobs for this tier
                     "Job Title": title,
                     "Location": job.get("location", ""),
                     "Via": job.get("via", ""),  # Job board source (Indeed, LinkedIn, etc.)
@@ -1010,6 +1014,18 @@ def fetch_jobs_for_company(company):
     )
 
     print(f"[{company}] → {len(local_results)} skilled-trade jobs found")
+
+    # ADDED: Track company-level metrics for analytics
+    global company_tracking
+    company_tracking.append({
+        "Company": company,
+        "Tier": tier,
+        "Employee Count": company_size_lookup(company),
+        "Job Cap": MAX_JOBS,
+        "Jobs Found": len(local_results),
+        "Success": len(local_results) > 0
+    })
+
     return local_results
 
 
@@ -1130,7 +1146,7 @@ if results:
         from resources.analytics import JobAnalytics
 
         analytics_output = OUTPUT_FILE.replace(".xlsx", "_Analytics.xlsx")
-        analytics = JobAnalytics(final_df)
+        analytics = JobAnalytics(final_df, company_tracking)  # ADDED: Pass company tracking data
         analytics.generate_report(analytics_output)
 
     except ImportError:
