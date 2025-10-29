@@ -34,7 +34,9 @@ Monitors real-time job postings from Connecticut's aerospace sector to provide:
 
 - **Coverage:** 137 Connecticut aerospace companies
 - **Job Categories:** 100+ skilled trades automatically classified
-- **Tier-Based Processing:** 5 company tiers with adaptive job caps (10-50 jobs per company)
+- **Tier-Based Processing:** 6 company tiers with adaptive job caps (10-80 jobs per company)
+- **Profile System:** Quick test, tier test, and production profiles with command-line override
+- **Persistent API Tracking:** Cross-session usage tracking with automatic key rotation
 - **Smart Fallback:** Automatic retry for companies with hyphenated names
 - **Frequency:** Daily/weekly automated scans (configurable)
 - **Output:** Excel files with tier analysis and comprehensive analytics
@@ -54,7 +56,7 @@ Monitors real-time job postings from Connecticut's aerospace sector to provide:
 ### Prerequisites
 
 - Python 3.7+ installed
-- SerpAPI account with API key ([sign up free](https://serpapi.com/users/sign_up) - 100 free searches)
+- SerpAPI account with API key ([sign up free](https://serpapi.com/users/sign_up) - 250 free searches/month)
 - Internet connection
 
 ### Step 1: Install Dependencies
@@ -71,20 +73,48 @@ Edit `resources/config.json`:
 {
   "api_keys": [
     {
-      "label": "My-Key",
+      "label": "primary-SerpAPI",
       "key": "YOUR_SERPAPI_KEY_HERE",
-      "limit": 250,
+      "monthly_limit": 250,
+      "billing_cycle_day": 1,
       "priority": 1
     }
   ],
+
+  "active_profile": "quick_test",
+
+  "profiles": {
+    "quick_test": {
+      "description": "Quick 3-company test (~5-10 API calls)",
+      "testing_mode": true,
+      "testing_company_limit": 3
+    },
+    "tier_test": {
+      "description": "15 companies diverse tier test (~30-40 API calls)",
+      "testing_mode": true,
+      "testing_company_limit": 15
+    },
+    "production": {
+      "description": "Full 137-company run (~260-280 API calls)",
+      "testing_mode": false,
+      "testing_company_limit": null
+    }
+  },
+
   "settings": {
-    "testing_mode": true,
-    "testing_company_limit": 1,
-    "input_file": "data/Test_3_Companies.xlsx",
-    "output_file": "output/Aerospace_Alley_SkilledTrades_Jobs.xlsx",
-    "max_api_calls_per_key": 250,
-    "min_interval_seconds": 3.0,
-    "max_threads": 3
+    "input_file": "data/Aerospace_Alley_Companies.xlsx",
+    "api_limits": {
+      "max_api_calls_per_key": 250,
+      "min_interval_seconds": 3.2
+    },
+    "company_limits": {
+      "tier1_job_cap": 80,
+      "tier2_job_cap": 40,
+      "tier3_job_cap": 30,
+      "tier4_job_cap": 20,
+      "tier5_job_cap": 10,
+      "tier99_job_cap": 20
+    }
   }
 }
 ```
@@ -97,23 +127,84 @@ python diagnostics/setup_check.py
 
 Expected: All green ✅ checkmarks
 
-### Step 4: Run Test (1 Company)
+### Step 4: Run Quick Test (3 Companies)
 
 ```bash
 python AeroComps.py
 ```
 
 **What happens:**
-- Processes 1 company (Barnes Aerospace)
-- Takes ~6-10 seconds
-- Finds 6-12 jobs
-- Saves to `output/Aerospace_Alley_SkilledTrades_Jobs.xlsx`
+- Processes 3 companies (uses active_profile: "quick_test" from config.json)
+- Takes ~30-60 seconds
+- Finds 15-30 jobs total
+- Uses ~5-10 API calls
+- Saves to `output/Test_3Companies_YYYYMMDD_HHMM.xlsx` (timestamped)
 
 ### Step 5: Scale Up
 
-**Test 3 companies:** Change `"testing_company_limit": 3` in config.json
+**Using Profiles (Recommended):**
+```bash
+# Quick 3-company test (~5-10 API calls)
+python AeroComps.py --profile quick_test
 
-**Run all 137:** Change `"testing_mode": false` in config.json
+# Diverse tier test with 15 companies (~30-40 API calls)
+python AeroComps.py --profile tier_test
+
+# Full 137-company production run (~260-280 API calls)
+python AeroComps.py --profile production
+```
+
+**Or edit config.json:**
+- Change `"active_profile"` to `"quick_test"`, `"tier_test"`, or `"production"`
+
+---
+
+## ⚠️ API Key Requirements
+
+**IMPORTANT:** For full 137-company production runs, you need sufficient API quota:
+
+**Option A: Multiple Free Keys** ✅ Recommended for testing
+- 2 free SerpAPI keys (250 searches/month each = 500 total)
+- System auto-rotates with 60-second warning before switching
+- Perfect for weekly/monthly scans
+
+**Option B: Single Paid Key** ✅ Recommended for frequent use
+- 1 paid SerpAPI key ($50/month for 5,000 searches)
+- No rotation needed
+- Ideal for daily scans or multiple projects
+
+**Expected API Usage:**
+- 137 companies × ~2 calls/company (with fallback) = **~260-280 API calls**
+- Quick test (3 companies): ~5-10 calls
+- Tier test (15 companies): ~30-40 calls
+- Production (137 companies): ~260-280 calls
+
+**Setup Multiple Keys:**
+```json
+{
+  "api_keys": [
+    {
+      "label": "primary-SerpAPI",
+      "key": "YOUR_FIRST_KEY",
+      "monthly_limit": 250,
+      "billing_cycle_day": 1,
+      "priority": 1
+    },
+    {
+      "label": "2nd API-Backup",
+      "key": "YOUR_SECOND_KEY",
+      "monthly_limit": 250,
+      "billing_cycle_day": 1,
+      "priority": 2
+    }
+  ]
+}
+```
+
+**Check API Usage:**
+```bash
+python resources/api_usage_tracker.py --report
+```
 
 ---
 
@@ -130,7 +221,9 @@ Skilled Trades Filter → Excel Export → Analytics
 
 **Key Components:**
 - **Rate Limit Protection:** 7-layer system (60 calls/hour max)
-- **Tier-Based Job Caps:** Adaptive limits (Tier 1: 50 jobs, Tier 5: 10 jobs)
+- **6-Tier Job Cap System:** Adaptive limits (Tier 1: 80 jobs → Tier 5: 10 jobs, Tier 99: 20 jobs for unknown)
+- **Persistent API Tracking:** Cross-session usage tracking with auto-rotation and 60-second warnings
+- **Profile System:** Command-line profile override (quick_test, tier_test, production)
 - **Smart Fallback System:** Automatic retry with hyphen removal for failed queries
 - **Circuit Breaker:** Stops after 3 consecutive failures
 - **Batch Processing:** 10 companies per batch with 45 second pauses
@@ -139,14 +232,15 @@ Skilled Trades Filter → Excel Export → Analytics
 
 ### Current System Features
 
-**Feature #1: Tier-Based Adaptive Job Caps**
-- **Implementation:** 5-tier company classification by employee count
-- **Tier 1 (10,000+ employees):** 50 job cap (e.g., Pratt & Whitney, Collins Aerospace)
+**Feature #1: 6-Tier Adaptive Job Cap System**
+- **Implementation:** 6-tier company classification by employee count
+- **Tier 1 (10,000+ employees):** 80 job cap (e.g., Pratt & Whitney, Collins Aerospace)
 - **Tier 2 (1,000-9,999):** 40 job cap (e.g., GKN Aerospace, Barnes Aerospace)
-- **Tier 3 (200-999):** 25 job cap
-- **Tier 4 (50-199):** 15 job cap
-- **Tier 5 (<50):** 10 job cap
-- **Impact:** Optimized API usage, captures all jobs from active companies
+- **Tier 3 (200-999):** 30 job cap
+- **Tier 4 (50-199):** 20 job cap
+- **Tier 5 (10-49):** 10 job cap
+- **Tier 99 (Unknown size):** 20 job cap (conservative default for companies not in database)
+- **Impact:** Optimized API usage (~260-280 calls for 137 companies), captures proportional jobs based on company size
 
 **Feature #2: Smart Fallback for Hyphenated Companies**
 - **Problem:** Companies like "Accu-Rite" may be indexed as "AccuRite" by Google
@@ -164,6 +258,30 @@ Skilled Trades Filter → Excel Export → Analytics
   - Failed Companies (0 jobs found with details)
 - **Impact:** Better visibility into hiring patterns by company size
 
+**Feature #4: Persistent API Usage Tracking**
+- **Problem:** Previous system reset usage counter on each run, risking quota exhaustion
+- **Solution:** Persistent state file survives script restarts and tracks cumulative usage
+- **Key Features:**
+  - Multi-key support with automatic rotation based on priority
+  - Per-key billing cycle tracking (auto-resets on billing day)
+  - Usage warnings at 75%, 90%, 100% thresholds
+  - 60-second warning before key switch with Ctrl+C safe exit
+  - Daily usage history logging
+  - Command-line usage reporting: `python resources/api_usage_tracker.py --report`
+- **Impact:** Zero risk of quota exhaustion, safe multi-key rotation, full usage visibility
+
+**Feature #5: Profile System with Command-Line Override**
+- **Problem:** Multiple config files for different test scenarios was confusing
+- **Solution:** Single config with named profiles (quick_test, tier_test, production)
+- **Usage:**
+  - Default: Uses `active_profile` from config.json
+  - Override: `python AeroComps.py --profile quick_test`
+  - Profiles include: testing mode, company limit, descriptions
+- **Dynamic Output Naming:**
+  - Testing: `Test_15Companies_20251029_1430.xlsx` (timestamped, won't overwrite)
+  - Production: `Aerospace_Alley_SkilledTrades_Jobs.xlsx` (standard name)
+- **Impact:** Simpler configuration, clear testing vs production separation, safer workflow
+
 ### Configuration
 
 **Safe Settings (Tested & Working):**
@@ -177,11 +295,11 @@ Skilled Trades Filter → Excel Export → Analytics
 ```
 
 **Rate Limits:**
-- Free tier: 100 searches/month
+- Free tier: 250 searches/month per key
 - Paid tier: 5,000 searches/month ($50)
-- Current usage: 1.5-2 searches per company (with fallback retry)
-- 137 companies = ~200-230 API calls total
-- Recommended: 2 API keys (250 calls each = 500 total buffer)
+- Current usage: ~2 searches per company (with fallback retry)
+- 137 companies = ~260-280 API calls total
+- **Recommended for production:** 2 free API keys (250 each = 500 total) OR 1 paid key
 
 ### Protection System Details
 
@@ -244,28 +362,41 @@ AeroSpace-Alley-Comps/
 ├── AeroComps.py                 # Main pipeline (DO NOT MODIFY)
 ├── README.md                    # This file
 ├── .gitignore                   # Git exclusions
+├── CHANGELOG.md                 # Version history
+├── PROJECT_STRUCTURE.md         # Architecture documentation
 │
 ├── resources/
-│   ├── config.json              # Configuration (API keys, settings)
+│   ├── config.json              # Master configuration (API keys, profiles, settings)
 │   ├── requirements.txt         # Python dependencies
-│   ├── rate_limit_protection.py # Protection system module
+│   ├── rate_limit_protection.py # 7-layer protection system
+│   ├── api_usage_tracker.py     # Persistent API usage tracking (NEW)
 │   └── analytics.py             # Analytics generation
 │
 ├── data/
-│   ├── Aerospace_Alley_Companies.xlsx    # Full list (137 companies)
-│   └── Test_3_Companies.xlsx             # Test subset (3 companies)
+│   └── Aerospace_Alley_Companies.xlsx    # Full list (137 companies)
 │
 ├── output/                      # Results folder (auto-created)
-│   ├── Aerospace_Alley_SkilledTrades_Jobs.xlsx
-│   └── Aerospace_Alley_SkilledTrades_Jobs_Analytics.xlsx
+│   ├── Aerospace_Alley_SkilledTrades_Jobs.xlsx  # Production output
+│   ├── Test_*_*.xlsx            # Test run outputs (timestamped)
+│   └── *_Analytics.xlsx         # Analytics reports
 │
-├── log/                         # Logs (auto-created)
-│   └── api_audit.jsonl
+├── log/                         # Logs (auto-created, gitignored)
+│   ├── api_audit.jsonl          # Complete API call history
+│   └── api_usage_state.json     # Persistent usage tracking (NEW)
 │
-├── diagnostics/                 # Diagnostic tools
+├── diagnostics/                 # Diagnostic & test tools
 │   ├── setup_check.py           # Verify installation
 │   ├── quick_check.py           # Test API access
-│   └── check_block_status.py    # Comprehensive diagnostics
+│   ├── check_block_status.py    # Comprehensive diagnostics
+│   └── test_matching_logic.py   # Job matching validation
+│
+├── future/                      # Future development planning
+│   └── DYNAMIC_COMPANY_SIZING_STRATEGY.md  # Scaling strategy (500+ companies)
+│
+└── docs/
+    └── archive/                 # Archived documentation
+        ├── testing/             # Historical test documentation
+        └── planning/            # Historical planning documents
 ```
 
 ---
@@ -428,6 +559,9 @@ pip install pandas openpyxl requests tqdm google-search-results
 
 **Columns:**
 - **Company Name:** Aerospace manufacturer
+- **Company Tier:** 1-5 (known size) or 99 (unknown size)
+- **Employee Count:** Employee count or "Unknown" for Tier 99 companies
+- **Job Cap:** Maximum jobs collected for this company based on tier
 - **Job Title:** Position title
 - **Location:** City, State
 - **Via:** Job board source (Indeed, LinkedIn, etc.)
@@ -591,21 +725,27 @@ Company Processing:
 
 **Phase:** Production-Ready ✅
 
-**Recent Achievements:**
-- ✅ Implemented 5-tier adaptive job cap system (Oct 29, 2025)
-- ✅ Added smart fallback for hyphenated company names
+**Recent Achievements (v2.2 - Oct 29, 2025):**
+- ✅ Implemented 6-tier adaptive job cap system (Tiers 1-5 + Tier 99 for unknown)
+- ✅ Persistent API usage tracking with cross-session state persistence
+- ✅ Profile system with command-line override (quick_test, tier_test, production)
+- ✅ Automatic API key rotation with 60-second warning period
+- ✅ Dynamic output filename generation (testing vs production)
+- ✅ Increased Tier 1 cap to 80 jobs for mega-corporations
+- ✅ Updated API limits to correct 250 searches/month per free key
+- ✅ Smart fallback for hyphenated company names
 - ✅ Enhanced analytics with tier tracking and success metrics
-- ✅ Optimized batch pauses to 45 seconds for efficiency
 - ✅ Achieved 100% API call success rate in testing
-- ✅ Comprehensive tier-based reporting
 
 **Current Capabilities:**
-- Automated data collection: 137 companies across 5 tiers
+- Automated data collection: 137 companies across 6 tiers
 - Skilled trades classification: 100+ keywords
-- Adaptive job caps: 10-50 jobs per company based on size
+- Adaptive job caps: 10-80 jobs per company based on size (Tier 99: 20 jobs for unknown)
+- Persistent API tracking: Usage survives restarts, prevents quota exhaustion
+- Profile system: Quick test (3), tier test (15), production (137) with CLI override
 - Smart fallback: Automatic retry for hyphenated names
 - Excel export with tier analytics
-- Multi-key support and rotation
+- Multi-key support with priority-based auto-rotation
 - Health monitoring with tier-specific insights
 
 ### Roadmap
@@ -765,6 +905,6 @@ All documentation has been consolidated into this README. Previous separate docu
 ---
 
 **Last Updated:** October 29, 2025
-**Version:** 2.1 (Tier System & Smart Fallback)
+**Version:** 2.2 (6-Tier System, Persistent API Tracking, Profile System)
 **Status:** Production-Ready ✅
 **Next Milestone:** Full 137-Company Production Run

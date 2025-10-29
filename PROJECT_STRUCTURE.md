@@ -12,6 +12,7 @@ AeroSpace-Alley-Comps/
 ├── AeroComps.py                    # Main job scanning pipeline
 ├── README.md                        # Project overview and setup guide
 ├── PROJECT_STRUCTURE.md             # This file - architecture documentation
+├── CHANGELOG.md                     # Version history and release notes
 ├── .gitignore                       # Git exclusions (config.json, output/, logs)
 │
 ├── data/                            # Input data (company lists)
@@ -21,39 +22,37 @@ AeroSpace-Alley-Comps/
 │   ├── __init__.py                  # Python package marker
 │   ├── analytics.py                 # Analytics generation (top trades, locations)
 │   ├── rate_limit_protection.py    # 7-layer rate limiting system
+│   ├── api_usage_tracker.py        # Persistent API usage tracking (NEW v2.2)
 │   ├── salary_extraction_pseudocode.py  # Future feature pseudocode
-│   ├── config.json                  # API keys & settings (GITIGNORED - not committed)
-│   └── config_test_max25.json       # Test configuration (25 API calls max)
+│   ├── config.json                  # Master config with profiles (GITIGNORED)
+│   └── requirements.txt             # Python dependencies
 │
 ├── diagnostics/                     # Diagnostic & test tools
 │   ├── check_block_status.py        # Check if IP blocked by SerpAPI
 │   ├── quick_check.py               # Quick API connectivity test
 │   ├── setup_check.py               # Comprehensive setup validation
-│   ├── TEST_SETUP_GUIDE.md          # Step-by-step test instructions
-│   ├── TEST_25_STRATEGIC.md         # 25-company test strategy
-│   ├── TEST_CONFIGURATION_4TIER.md  # 4-tier test configuration
-│   ├── TEST_MAX_25_CALLS.md         # 9-company test (25 API calls)
-│   ├── Test_3_Companies.xlsx        # 3-company quick test file
-│   ├── Test_Max25_9Companies.csv    # 9-company test CSV
-│   └── convert_test_csv_to_excel.py # CSV→Excel converter
+│   ├── test_matching_logic.py       # Job matching validation tests
+│   └── TEST_SETUP_GUIDE.md          # Step-by-step test instructions
 │
 ├── future/                          # Future development planning
-│   ├── COMPANY_SIZE_LOOKUP_IMPLEMENTATION.md   # Company size database docs
-│   ├── EXTERNAL_API_OPTIONS_MINIMAL_COST.md    # Alternative data sources
-│   ├── IMPLEMENTATION_REVIEW_SUMMARY.md        # Implementation analysis
-│   ├── IMPLEMENTATION_SUMMARY.md               # Implementation guide
-│   ├── KEYWORD_EXPANSION_ANALYSIS.md           # Keyword research
-│   ├── PRE_IMPLEMENTATION_REVIEW.md            # Pre-launch review
-│   ├── STRATEGY_INDUSTRY_EXPANSION.md          # Industry expansion strategy
-│   └── STRATEGY_JOB_CAP_OPTIMIZATION.md        # API optimization strategy
+│   ├── DYNAMIC_COMPANY_SIZING_STRATEGY.md  # Scaling strategy (500+ companies)
+│   ├── STRATEGY_INDUSTRY_EXPANSION.md       # Industry expansion strategy
+│   └── STRATEGY_JOB_CAP_OPTIMIZATION.md     # API optimization strategy
+│
+├── docs/
+│   └── archive/                     # Archived documentation
+│       ├── testing/                 # Historical test documentation
+│       └── planning/                # Historical planning documents
 │
 ├── log/                             # Runtime logs (GITIGNORED)
 │   ├── .gitkeep                     # Preserves directory in git
-│   └── api_audit.jsonl              # API call audit trail (created at runtime)
+│   ├── api_audit.jsonl              # API call audit trail (created at runtime)
+│   └── api_usage_state.json         # Persistent usage tracking state (NEW v2.2)
 │
 └── output/                          # Results (GITIGNORED - created at runtime)
-    ├── <Company>_Results.xlsx           # Job listings (per run)
-    └── <Company>_Results_Analytics.xlsx # Analytics summary (per run)
+    ├── Aerospace_Alley_SkilledTrades_Jobs.xlsx  # Production output
+    ├── Test_*_*.xlsx                # Test run outputs (timestamped)
+    └── *_Analytics.xlsx             # Analytics reports
 ```
 
 ---
@@ -62,11 +61,14 @@ AeroSpace-Alley-Comps/
 
 ### Production Files
 
-**`AeroComps.py`** - Main Pipeline (1,000+ lines)
-- 5-tier adaptive job caps (10, 15, 25, 40, 50 jobs based on company size)
+**`AeroComps.py`** - Main Pipeline (1,250+ lines)
+- 6-tier adaptive job caps (80, 40, 30, 20, 10 jobs + Tier 99: 20 jobs for unknown size)
 - Comprehensive job matching (ALL aerospace roles: engineering, IT, business, admin, trades)
+- Profile system with command-line override (quick_test, tier_test, production)
+- Persistent API usage tracking integration
+- Dynamic output filename generation (testing vs production)
 - 7-layer rate limiting system (60 calls/hour safe limit)
-- Excel analytics generation (top trades, locations, hiring trends)
+- Excel analytics generation (top trades, locations, hiring trends, tier analysis)
 
 **`resources/analytics.py`** - Analytics Module
 - Top 10 in-demand trades analysis
@@ -75,41 +77,91 @@ AeroSpace-Alley-Comps/
 - Job board source analysis
 - Excel report generation
 
-**`resources/rate_limit_protection.py`** - Rate Limiting
+**`resources/rate_limit_protection.py`** - 7-Layer Rate Limiting (900+ lines)
 - Token Bucket algorithm (60 calls/hour capacity)
 - Circuit Breaker pattern (3 failure threshold)
 - Exponential backoff (3 retry attempts)
-- Batch processor (10 companies/batch with 2-5 min pauses)
+- Batch processor (10 companies/batch with 45-second pauses)
+- Dual rate implementation (3.2s active, 60s commented for troubleshooting)
 - Audit logger (JSONL format)
 - Health monitor (real-time alerts)
 
+**`resources/api_usage_tracker.py`** - Persistent API Usage Tracking (NEW v2.2, 450 lines)
+- Cross-session usage tracking (survives script restarts)
+- Multi-key support with automatic rotation based on priority
+- Per-key billing cycle tracking with auto-reset on billing day
+- Usage warnings at 75%, 90%, 100% thresholds
+- 60-second warning before key switch with Ctrl+C safe exit option
+- Daily usage history logging
+- Command-line usage reporting: `python resources/api_usage_tracker.py --report`
+- State file: `log/api_usage_state.json` (persistent JSON state)
+
 ### Configuration Files
 
-**`resources/config.json`** - Production Config (GITIGNORED)
+**`resources/config.json`** - Master Config with Profiles (GITIGNORED)
 ```json
 {
   "api_keys": [
-    {"label": "Primary", "key": "YOUR_KEY", "limit": 250, "priority": 1}
+    {
+      "label": "primary-SerpAPI",
+      "key": "YOUR_SERPAPI_KEY_HERE",
+      "monthly_limit": 250,
+      "billing_cycle_day": 1,
+      "priority": 1
+    },
+    {
+      "label": "2nd API-Backup",
+      "key": "YOUR_BACKUP_KEY_HERE",
+      "monthly_limit": 250,
+      "billing_cycle_day": 1,
+      "priority": 2
+    }
   ],
+
+  "active_profile": "tier_test",
+
+  "profiles": {
+    "quick_test": {
+      "description": "Quick 3-company test (~5-10 API calls)",
+      "testing_mode": true,
+      "testing_company_limit": 3
+    },
+    "tier_test": {
+      "description": "15 companies diverse tier test (~30-40 API calls)",
+      "testing_mode": true,
+      "testing_company_limit": 15
+    },
+    "production": {
+      "description": "Full 137-company run (~260-280 API calls)",
+      "testing_mode": false,
+      "testing_company_limit": null
+    }
+  },
+
   "settings": {
-    "testing_mode": false,
     "input_file": "data/Aerospace_Alley_Companies.xlsx",
-    "output_file": "output/AeroAlley_Results.xlsx",
-    "max_api_calls_per_key": 250,
-    "min_interval_seconds": 3.0,
-    "max_threads": 3
+    "api_limits": {
+      "max_api_calls_per_key": 250,
+      "min_interval_seconds": 3.2
+    },
+    "company_limits": {
+      "tier1_job_cap": 80,
+      "tier2_job_cap": 40,
+      "tier3_job_cap": 30,
+      "tier4_job_cap": 20,
+      "tier5_job_cap": 10,
+      "tier99_job_cap": 20
+    }
   }
 }
 ```
-
-**`resources/config_test_max25.json`** - Test Config (9 companies, 25 API calls)
 
 ### Data Files
 
 **`data/Aerospace_Alley_Companies.xlsx`** - Production Data
 - 137 Connecticut aerospace companies
 - Company Name column (required)
-- Expected API calls: ~225-250 (within free tier limits)
+- Expected API calls: ~260-280 (requires 2 free keys OR 1 paid key)
 
 ---
 
@@ -135,38 +187,76 @@ AeroSpace-Alley-Comps/
 
 ---
 
-## 📊 5-Tier Adaptive Job Caps
+## 📊 6-Tier Adaptive Job Cap System
 
 | Tier | Employee Count | Job Cap | Companies (CT) | API Calls/Company |
 |------|----------------|---------|----------------|-------------------|
-| 1    | 10,000+        | 50      | 2              | 5                 |
+| 1    | 10,000+        | 80      | 2              | 8                 |
 | 2    | 1,000-9,999    | 40      | 5              | 4                 |
-| 3    | 200-999        | 25      | 15             | 3 (avg 2.5)       |
-| 4    | 50-199         | 15      | 35             | 2 (avg 1.5)       |
+| 3    | 200-999        | 30      | 15             | 3                 |
+| 4    | 50-199         | 20      | 35             | 2                 |
 | 5    | 10-49          | 10      | 80             | 1                 |
+| 99   | Unknown size   | 20      | ~30 (est)      | 2                 |
 
-**Total:** 137 companies → ~225 API calls (under 250 free tier limit)
+**Total:** 137 companies → ~260-280 API calls
+
+**Key Features:**
+- **Tier 99:** Conservative default for companies not in size database (20 jobs)
+- **Employee Count Display:** Known sizes show count, Tier 99 shows "Unknown"
+- **Dynamic Sizing (Future):** See `future/DYNAMIC_COMPANY_SIZING_STRATEGY.md` for 500+ company scaling
+
+**API Key Requirements:**
+- **2 free keys recommended:** 250 each = 500 total (ideal for 137 companies)
+- **OR 1 paid key:** $50/month for 5,000 searches
 
 ---
 
 ## 🚀 Usage
 
-### Production Run (Full 137 Companies)
+### Quick Test (3 Companies)
 ```bash
-# 1. Add your API key to resources/config.json
-# 2. Run full scan
-python AeroComps.py
+python AeroComps.py --profile quick_test
 
-# Expected: 2,000-4,000+ jobs across all aerospace roles
-# Runtime: 30-40 minutes (rate limited to 60 calls/hour)
+# Expected: 15-30 jobs
+# API Calls: ~5-10
+# Runtime: ~30-60 seconds
 ```
 
-### Test Run (9 Companies, 25 API Calls)
+### Tier Test (15 Companies)
 ```bash
-python AeroComps.py --config resources/config_test_max25.json
+python AeroComps.py --profile tier_test
 
-# Expected: 300-500 jobs
+# Expected: 100-200 jobs
+# API Calls: ~30-40
 # Runtime: 2-3 minutes
+```
+
+### Production Run (Full 137 Companies)
+```bash
+python AeroComps.py --profile production
+
+# Expected: 2,000-4,000+ jobs across all aerospace roles
+# API Calls: ~260-280
+# Runtime: 12-15 minutes (rate limited to 60 calls/hour, 45s batch pauses)
+```
+
+### Using Default Profile
+```bash
+# Uses active_profile from config.json
+python AeroComps.py
+
+# To change default: Edit "active_profile" in config.json
+```
+
+### Check API Usage
+```bash
+python resources/api_usage_tracker.py --report
+
+# Shows:
+# - Usage per key (calls used / monthly limit)
+# - Remaining calls per key
+# - Recent daily usage history
+# - Warning/critical status indicators
 ```
 
 ### Diagnostics
@@ -185,8 +275,12 @@ python diagnostics/setup_check.py
 
 ## 📈 Output Files
 
-**Job Results:** `output/<InputFile>_Results.xlsx`
+**Job Results:** `output/Aerospace_Alley_SkilledTrades_Jobs.xlsx` (production)
+or `output/Test_*Companies_*.xlsx` (testing with timestamp)
 - Company Name
+- Company Tier (1-5 or 99 for unknown)
+- Employee Count (number or "Unknown" for Tier 99)
+- Job Cap (max jobs collected for this company)
 - Job Title
 - Location
 - Via (job board source)
@@ -195,15 +289,24 @@ python diagnostics/setup_check.py
 - Description Snippet (first 200 chars)
 - Timestamp (when scraped)
 
-**Analytics:** `output/<InputFile>_Results_Analytics.xlsx`
+**Analytics:** `output/*_Analytics.xlsx`
 - Summary Statistics (total jobs, companies, date range, job boards)
 - Top 10 In-Demand Trades (with job counts and percentages)
 - Top 10 Hiring Companies
 - Top 10 Locations
+- Tier Analysis (companies and jobs by tier)
+- Tier Success Metrics (success rates by company size)
+- Failed Companies (0 jobs found, with tier details)
 
 **Audit Log:** `log/api_audit.jsonl`
 - Timestamp, API call details, response status, company, job count
 - Used for debugging and cost analysis
+
+**API Usage State:** `log/api_usage_state.json` (NEW v2.2)
+- Persistent usage tracking across script executions
+- Per-key usage counters, daily history, billing cycle tracking
+- Auto-resets on billing day, survives restarts
+- Used by api_usage_tracker.py for quota management
 
 ---
 
@@ -244,17 +347,20 @@ rm -rf __pycache__
 ### Updating Company Database
 1. Update `data/Aerospace_Alley_Companies.xlsx`
 2. Ensure "Company Name" column exists
-3. Verify company size tiers in `COMPANY_SIZE_DATABASE` (AeroComps.py:510-553)
+3. Add new companies to `COMPANY_SIZE_DATABASE` in `AeroComps.py` (lines 180-250) if size known
+   - Companies not in database default to Tier 99 (20 jobs)
+4. For 500+ companies, see `future/DYNAMIC_COMPANY_SIZING_STRATEGY.md` for automated sizing
 
 ---
 
 ## 📝 Future Development
 
 See `future/` folder for:
-- External API integration options (zero-cost alternatives)
-- Salary extraction implementation
-- Industry expansion strategies (beyond aerospace)
-- Job cap optimization (machine learning approaches)
+- **Dynamic Company Sizing:** `DYNAMIC_COMPANY_SIZING_STRATEGY.md` - Automated company size lookup for 500+ company scaling
+- **Industry Expansion:** `STRATEGY_INDUSTRY_EXPANSION.md` - Beyond aerospace
+- **Job Cap Optimization:** `STRATEGY_JOB_CAP_OPTIMIZATION.md` - Machine learning approaches
+
+**Archived Documentation:** See `docs/archive/` for historical planning and testing documents
 
 ---
 
@@ -283,5 +389,7 @@ See `future/` folder for:
 ---
 
 **Status:** ✅ Production-Ready
-**Last Tested:** October 2025
+**Version:** 2.2 (6-Tier System, Persistent API Tracking, Profile System)
+**Last Updated:** October 29, 2025
+**Last Tested:** October 29, 2025
 **Next Review:** Quarterly (company size updates)
