@@ -427,8 +427,8 @@ class IntelligentBatchProcessor:
     def __init__(
         self,
         batch_size: int = 10,
-        min_pause: int = 120,
-        max_pause: int = 300
+        min_pause: int = 45,
+        max_pause: int = 45
     ):
         """
         Initialize batch processor
