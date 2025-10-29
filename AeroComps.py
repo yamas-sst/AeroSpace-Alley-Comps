@@ -96,6 +96,60 @@ except Exception as e:
     exit(1)
 
 # ======================================================
+# PROFILE SYSTEM: Select Active Profile
+# ======================================================
+import argparse
+
+# Parse command-line arguments
+parser = argparse.ArgumentParser(
+    description='Aerospace Alley Job Scanner',
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    epilog="""
+Examples:
+  python AeroComps.py                         # Use profile from config.json
+  python AeroComps.py --profile quick_test    # Quick 3-company test
+  python AeroComps.py --profile production    # Full 137-company run
+    """
+)
+parser.add_argument('--profile', type=str, help='Profile to use (overrides config.json)')
+args = parser.parse_args()
+
+# Get active profile (command line takes precedence)
+if args.profile:
+    active_profile_name = args.profile
+    print(f"🔀 Profile override: {args.profile} (from command line)")
+else:
+    active_profile_name = CONFIG.get('active_profile')
+    if active_profile_name is None:
+        print("\n❌ ERROR: No 'active_profile' specified in config.json")
+        print("   Please set 'active_profile' to one of: " + ", ".join(CONFIG['profiles'].keys()))
+        print("   Or use --profile flag: python AeroComps.py --profile quick_test")
+        exit(1)
+
+# Validate profile exists
+if active_profile_name not in CONFIG['profiles']:
+    print(f"\n❌ ERROR: Invalid profile '{active_profile_name}'")
+    print(f"   Available profiles: {', '.join(CONFIG['profiles'].keys())}")
+    exit(1)
+
+# Load settings from active profile
+active_profile = CONFIG['profiles'][active_profile_name]
+print(f"\n✅ Active Profile: {active_profile_name}")
+print(f"   Description: {active_profile['description']}")
+
+# Apply profile settings (override settings section)
+TESTING_MODE = active_profile['testing_mode']
+TESTING_COMPANY_LIMIT = active_profile.get('testing_company_limit', None)
+
+# Display confirmation
+if TESTING_MODE:
+    print(f"   Mode: TESTING ({TESTING_COMPANY_LIMIT} companies)")
+else:
+    print(f"   Mode: PRODUCTION (all companies)")
+
+print("="*70 + "\n")
+
+# ======================================================
 # INITIALIZE PROTECTION SYSTEM
 # ======================================================
 print("Initializing rate limit protection system...")
@@ -120,25 +174,51 @@ except Exception as e:
 
 
 # ======================================================
+# API USAGE TRACKER: Persistent State Management
+# ======================================================
+from resources.api_usage_tracker import PersistentAPIUsageTracker
+
+# Initialize tracker
+usage_tracker = PersistentAPIUsageTracker(CONFIG)
+
+# Get available API key
+api_key_info, remaining_calls = usage_tracker.get_available_key()
+
+if api_key_info is None:
+    print("\n" + "="*70)
+    print("❌ ALL API KEYS EXHAUSTED")
+    print("="*70)
+    print(usage_tracker.get_usage_report())
+    print("\nOPTIONS:")
+    print("  - Wait for monthly reset (check billing cycle at serpapi.com)")
+    print("  - Request premium usage limits (contact serpapi.com/support)")
+    print("  - Add more API keys to config.json")
+    print("="*70 + "\n")
+    exit(1)
+
+API_KEY = api_key_info['key']
+API_KEY_LABEL = api_key_info['label']
+
+# ======================================================
 # CONFIGURATION CONSTANTS (Loaded from config.json)
 # ======================================================
-# API Authentication - Use primary API key by default
-API_KEY = CONFIG['api_keys'][0]['key']  # Primary API key
-API_KEY_LABEL = CONFIG['api_keys'][0]['label']  # Label for logging
-
 # File Paths (from config)
 INPUT_FILE = CONFIG['settings']['input_file']
-OUTPUT_FILE = CONFIG['settings']['output_file']
+
+# Dynamic output filename based on mode
+if TESTING_MODE:
+    timestamp = pd.Timestamp.now().strftime("%Y%m%d_%H%M")
+    OUTPUT_FILE = f"output/Test_{TESTING_COMPANY_LIMIT}Companies_{timestamp}.xlsx"
+    print(f"🧪 TESTING MODE: Output → {OUTPUT_FILE}")
+else:
+    OUTPUT_FILE = "output/Aerospace_Alley_SkilledTrades_Jobs.xlsx"
+    print(f"📊 PRODUCTION MODE: Output → {OUTPUT_FILE}")
 
 # Query Optimization
 MAX_QUERY_LENGTH = CONFIG['settings'].get('max_query_length', 200)
 
 # Performance Tuning
 MAX_THREADS = CONFIG['settings'].get('max_threads', 5)
-
-# Testing Mode
-TESTING_MODE = CONFIG['settings'].get('testing_mode', False)
-TESTING_COMPANY_LIMIT = CONFIG['settings'].get('testing_company_limit', 1)
 
 
 # ======================================================
@@ -308,6 +388,7 @@ def safe_api_request(params, company):
 
         # Increment counter and log progress
         api_calls += 1
+        usage_tracker.increment_usage(API_KEY_LABEL, calls=1)
         print(f"API call #{api_calls} ({API_KEY_LABEL}) → {company}")
 
     # Make the actual API request (outside the lock to allow other threads to proceed)
@@ -619,14 +700,20 @@ SKILLED_TRADES_KEYWORDS_LEGACY = [
 # MAINTENANCE: Update quarterly with employee count changes
 
 COMPANY_SIZE_DATABASE = {
-    # Tier 1: Mega-Corporations (10,000+ employees)
+    # ======================================================
+    # TIER 1: MEGA-CORPORATIONS (10,000+ employees)
+    # Job Cap: 80 jobs
+    # ======================================================
     "Pratt & Whitney": {"employees": 35000, "tier": 1},
-    "Pratt Whitney": {"employees": 35000, "tier": 1},
+    "Pratt Whitney": {"employees": 35000, "tier": 1},  # Variant without &
     "RTX": {"employees": 35000, "tier": 1},
     "Collins Aerospace": {"employees": 15000, "tier": 1},
     "Collins": {"employees": 15000, "tier": 1},
 
-    # Tier 2: Major OEMs (1,000-9,999 employees)
+    # ======================================================
+    # TIER 2: MAJOR OEMs (1,000-9,999 employees)
+    # Job Cap: 40 jobs
+    # ======================================================
     "Sikorsky": {"employees": 8000, "tier": 2},
     "Sikorsky Aircraft": {"employees": 8000, "tier": 2},
     "GE Aerospace": {"employees": 3500, "tier": 2},
@@ -635,7 +722,10 @@ COMPANY_SIZE_DATABASE = {
     "Barnes Aerospace": {"employees": 1200, "tier": 2},
     "Barnes": {"employees": 1200, "tier": 2},
 
-    # Tier 3: Medium Suppliers (200-999 employees)
+    # ======================================================
+    # TIER 3: MEDIUM SUPPLIERS (200-999 employees)
+    # Job Cap: 30 jobs
+    # ======================================================
     "GKN Aerospace": {"employees": 800, "tier": 3},
     "GKN": {"employees": 800, "tier": 3},
     "Chromalloy": {"employees": 600, "tier": 3},
@@ -650,7 +740,10 @@ COMPANY_SIZE_DATABASE = {
     "Woodward": {"employees": 250, "tier": 3},
     "Heroux-Devtek": {"employees": 200, "tier": 3},
 
-    # Tier 4: Small-Medium Suppliers (50-199 employees)
+    # ======================================================
+    # TIER 4: SMALL-MEDIUM SUPPLIERS (50-199 employees)
+    # Job Cap: 20 jobs
+    # ======================================================
     "Curtiss-Wright": {"employees": 150, "tier": 4},
     "Aero Gear": {"employees": 120, "tier": 4},
     "Stanadyne": {"employees": 100, "tier": 4},
@@ -661,6 +754,19 @@ COMPANY_SIZE_DATABASE = {
     "Connecticut Spring": {"employees": 85, "tier": 4},
     "Standard Aero": {"employees": 75, "tier": 4},
     "Tyler Technologies": {"employees": 60, "tier": 4},
+
+    # ======================================================
+    # TIER 5: SMALL COMPANIES (10-49 employees)
+    # Job Cap: 10 jobs
+    # ======================================================
+    # Note: Most small companies not in database
+    # They will default to Tier 99 (Unknown)
+
+    # ======================================================
+    # TIER 99: UNKNOWN SIZE
+    # Job Cap: 20 jobs (conservative default)
+    # Note: Companies not in this database default to Tier 99
+    # ======================================================
 }
 
 def company_size_lookup(company_name):
@@ -673,7 +779,7 @@ def company_size_lookup(company_name):
         company_name (str): Company name from input file
 
     Returns:
-        int: Approximate employee count (default 50 if not found)
+        int: Approximate employee count (None if not found)
     """
     company_name_clean = company_name.lower().strip()
 
@@ -692,32 +798,33 @@ def company_size_lookup(company_name):
         if company_name_clean in known_company.lower():
             return data["employees"]
 
-    # Default: assume small supplier
-    return 50
+    # Company not found - return None (Tier 99 will be assigned)
+    return None
 
 
 def get_company_tier(company_name):
     """
-    Determine company tier (1-5) based on employee count.
+    Determine company tier (1-5 for known sizes, 99 for unknown).
+
+    Tier 1: 10,000+ employees (80 jobs) - Mega-corporations
+    Tier 2: 1,000-9,999 employees (40 jobs) - Major OEMs
+    Tier 3: 200-999 employees (30 jobs) - Medium suppliers
+    Tier 4: 50-199 employees (20 jobs) - Small-medium suppliers
+    Tier 5: 10-49 employees (10 jobs) - Small companies
+    Tier 99: Unknown size (20 jobs) - No data available
 
     Args:
         company_name (str): Company name from input file
 
     Returns:
-        int: Tier number (1=Mega Corp, 2=Major OEM, 3=Medium, 4=Small-Medium, 5=Small)
+        int: Tier number (1-5 for known, 99 for unknown)
     """
-    employees = company_size_lookup(company_name)
+    # Check if company is in curated database
+    if company_name in COMPANY_SIZE_DATABASE:
+        return COMPANY_SIZE_DATABASE[company_name]["tier"]
 
-    if employees >= 10000:
-        return 1  # Tier 1: Mega-Corporation (10K+)
-    elif employees >= 1000:
-        return 2  # Tier 2: Major OEM (1-10K)
-    elif employees >= 200:
-        return 3  # Tier 3: Medium Supplier
-    elif employees >= 50:
-        return 4  # Tier 4: Small-Medium Supplier
-    else:
-        return 5  # Tier 5: Small Shop
+    # Company not in database - classify as unknown
+    return 99
 
 
 def get_job_cap_for_company(company_name):
@@ -730,20 +837,21 @@ def get_job_cap_for_company(company_name):
         company_name (str): Company name from input file
 
     Returns:
-        int: Maximum jobs to collect (10, 15, 25, 40, or 50)
+        int: Maximum jobs to collect (10, 20, 30, 40, or 80)
     """
     tier = get_company_tier(company_name)
 
-    if tier == 1:
-        return 50  # Mega-corps - highest diversity expected
-    elif tier == 2:
-        return 40  # Major OEMs - high diversity
-    elif tier == 3:
-        return 25  # Medium suppliers - moderate diversity
-    elif tier == 4:
-        return 15  # Small-medium - focused hiring
-    else:
-        return 10  # Small shops - limited roles
+    # Job cap mapping by tier
+    job_caps = {
+        1: 80,   # Tier 1: Mega-corporations (10,000+ employees)
+        2: 40,   # Tier 2: Major OEMs (1,000-9,999 employees)
+        3: 30,   # Tier 3: Medium suppliers (200-999 employees)
+        4: 20,   # Tier 4: Small-medium suppliers (50-199 employees)
+        5: 10,   # Tier 5: Small companies (10-49 employees)
+        99: 20   # Tier 99: Unknown size (conservative default)
+    }
+
+    return job_caps.get(tier, 20)  # Default to 20 if somehow invalid
 
 
 # ======================================================
@@ -901,7 +1009,10 @@ def fetch_jobs_for_company(company):
     tier = get_company_tier(company)
 
     # Log the tier and cap for this company
-    print(f"[{company}] Tier {tier}, Job cap: {MAX_JOBS}")
+    if tier == 99:
+        print(f"[{company}] Tier 99 (Unknown size), Job cap: {MAX_JOBS} (conservative default)")
+    else:
+        print(f"[{company}] Tier {tier}, Job cap: {MAX_JOBS}")
 
     # Pagination: Request pages until we hit the cap
     # Each page has ~10 jobs, so we need (MAX_JOBS / 10) pages
@@ -996,11 +1107,12 @@ def fetch_jobs_for_company(company):
             # VALIDATION 2: Only keep jobs with skilled trades keywords in title
             # Uses smart word-based matching (see is_skilled_trade_job function)
             if is_skilled_trade_job(title):
+                employee_count = company_size_lookup(company)
                 local_results.append({
                     "Company": company,
-                    "Company Tier": tier,  # ADDED: Company size tier (1-5)
-                    "Employee Count": company_size_lookup(company),  # ADDED: Approximate employees
-                    "Job Cap": MAX_JOBS,  # ADDED: Max jobs for this tier
+                    "Company Tier": tier,  # Tier 1-5 or 99 (Unknown)
+                    "Employee Count": employee_count if employee_count else "Unknown",  # Show "Unknown" if None
+                    "Job Cap": MAX_JOBS,  # Max jobs for this tier
                     "Job Title": title,
                     "Location": job.get("location", ""),
                     "Via": job.get("via", ""),  # Job board source (Indeed, LinkedIn, etc.)
@@ -1034,10 +1146,11 @@ def fetch_jobs_for_company(company):
 
     # ADDED: Track company-level metrics for analytics
     global company_tracking
+    employee_count = company_size_lookup(company)
     company_tracking.append({
         "Company": company,
         "Tier": tier,
-        "Employee Count": company_size_lookup(company),
+        "Employee Count": employee_count if employee_count else "Unknown",
         "Job Cap": MAX_JOBS,
         "Jobs Found": len(local_results),
         "Success": len(local_results) > 0
@@ -1106,10 +1219,25 @@ for i, company in enumerate(tqdm(companies, desc="Processing companies")):
 
         # BATCH PAUSE: Every 10 companies, take a human-like break
         if (i + 1) % 10 == 0 and (i + 1) < len(companies):
-            pause_duration = batch_processor.calculate_pause()
-            print(f"\n⏸️  Batch {(i + 1) // 10} complete. Pausing for {pause_duration:.0f} seconds...")
-            print(f"   This prevents API rate limiting and mimics human behavior.")
-            time.sleep(pause_duration)
+            pause_duration = int(batch_processor.calculate_pause())
+            print(f"\n⏸️  Batch {(i + 1) // 10} complete. Pausing for {pause_duration} seconds...")
+
+            # ===== OPTION 1: SIMPLE COUNTDOWN (COMMENTED OUT) =====
+            # Uncomment this section and comment out Option 2 below for simple countdown
+            # print(f"   This prevents API rate limiting and mimics human behavior.")
+            # for remaining in range(pause_duration, 0, -15):
+            #     print(f"   ⏳ {remaining} seconds remaining...")
+            #     time.sleep(15)
+            # print(f"▶️  Resuming processing...\n")
+
+            # ===== OPTION 2: PROGRESS BAR (ACTIVE) =====
+            # Comment this section and uncomment Option 1 above for simple countdown
+            print(f"   Prevents API rate limiting and mimics human behavior")
+            with tqdm(total=pause_duration, desc="  Pausing", unit="s",
+                      bar_format='{l_bar}{bar}| {n:.0f}/{total:.0f}s') as pbar:
+                for j in range(pause_duration):
+                    time.sleep(1)
+                    pbar.update(1)
             print(f"▶️  Resuming processing...\n")
 
     except Exception as e:

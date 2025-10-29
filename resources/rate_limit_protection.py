@@ -870,11 +870,36 @@ class RateLimitProtectionCoordinator:
         requested_interval = config['settings']['min_interval_seconds']
         safe_interval = ConfigurationValidator.get_safe_interval(requested_interval)
 
+        # ===== RECOMMENDED SAFE RATE (ACTIVE) =====
+        # 3.2 seconds between calls = ~1,125 calls/hour
+        # Fast runtime, tested and working in production
+        # 137 companies = ~12-15 minutes
+        rate_limiter_refill = 1.0 / safe_interval  # safe_interval = 3.2
+
+        # ===== ULTRA-SAFE RATE (COMMENTED OUT) =====
+        # Uncomment this section and comment out above if experiencing issues:
+        # - IP blocks or 429 errors
+        # - Suspicious activity warnings
+        # - Need ultra-conservative approach
+        #
+        # 60 seconds between calls = 60 calls/hour = 1 call/minute
+        # Mimics human behavior, zero risk of blocks
+        # 137 companies = ~3.8-4.5 hours runtime
+        #
+        # To enable:
+        # 1. Comment out the "rate_limiter_refill" line above
+        # 2. Uncomment the line below:
+        # rate_limiter_refill = 1.0 / 60.0
+
         # Initialize all protection layers
         self.rate_limiter = TokenBucketRateLimiter(
             capacity=60,
-            refill_rate=1.0 / safe_interval
+            refill_rate=rate_limiter_refill
         )
+
+        # Log active rate
+        actual_interval = 1.0 / rate_limiter_refill
+        print(f"⚙️  Rate Limiter: {actual_interval:.1f}s between calls")
 
         self.circuit_breaker = CircuitBreaker(
             failure_threshold=3,

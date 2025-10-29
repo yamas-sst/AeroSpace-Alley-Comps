@@ -1,0 +1,77 @@
+{
+  "api_keys": [
+    {
+      "label": "primary-SerpAPI",
+      "key": "YOUR_SERPAPI_KEY_HERE",
+      "monthly_limit": 250,
+      "billing_cycle_day": 1,
+      "priority": 1,
+      "notes": "Primary API key for production"
+    },
+    {
+      "label": "2nd API-Backup",
+      "key": "YOUR_BACKUP_KEY_HERE",
+      "monthly_limit": 250,
+      "billing_cycle_day": 1,
+      "priority": 2,
+      "notes": "Backup key for overflow"
+    }
+  ],
+
+  "active_profile": "tier_test",
+
+  "profiles": {
+    "quick_test": {
+      "description": "Quick 3-company test (~5-10 API calls, 1-2 minutes)",
+      "testing_mode": true,
+      "testing_company_limit": 3
+    },
+    "tier_test": {
+      "description": "Diverse tier test (15 companies, ~30-40 API calls, 5-8 minutes)",
+      "testing_mode": true,
+      "testing_company_limit": 15
+    },
+    "production": {
+      "description": "Full 137-company production run (~260-280 API calls, 12-15 minutes)",
+      "testing_mode": false,
+      "testing_company_limit": null
+    }
+  },
+
+  "settings": {
+    "input_file": "data/Aerospace_Alley_Companies.xlsx",
+
+    "api_limits": {
+      "max_api_calls_per_key": 250,
+      "min_interval_seconds": 3.2,
+      "max_threads": 5,
+      "batch_size": 10,
+      "batch_pause_seconds": 45,
+
+      "_comments": {
+        "max_api_calls_per_key": "SerpAPI Free: 100/month (need 3 keys), Paid: 5,000/month ($50)",
+        "min_interval_seconds": "Recommended: 3.2s (fast, tested). If issues: change to 60.0s and uncomment ultra-safe rate in rate_limit_protection.py",
+        "batch_pause_seconds": "45s between batches (10 companies/batch) - tested safe",
+        "IMPORTANT": "Need at least 2 free API keys (250 each = 500 total) for 137 companies, OR 1 paid tier ($50/month)"
+      }
+    },
+
+    "company_limits": {
+      "tier1_job_cap": 80,
+      "tier2_job_cap": 40,
+      "tier3_job_cap": 30,
+      "tier4_job_cap": 20,
+      "tier5_job_cap": 10,
+      "tier99_job_cap": 20,
+
+      "_comments": {
+        "tier1_job_cap": "Mega-corporations (10,000+ employees) - 80 jobs",
+        "tier2_job_cap": "Major OEMs (1,000-9,999 employees) - 40 jobs",
+        "tier3_job_cap": "Medium suppliers (200-999 employees) - 30 jobs",
+        "tier4_job_cap": "Small-medium suppliers (50-199 employees) - 20 jobs",
+        "tier5_job_cap": "Small companies (10-49 employees) - 10 jobs",
+        "tier99_job_cap": "Unknown company size - 20 jobs (conservative default)"
+      }
+    }
+  }
+}
