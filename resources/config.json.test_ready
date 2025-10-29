@@ -21,7 +21,7 @@
     "input_file": "diagnostics/Test_3_Companies.xlsx",
     "output_file": "output/Test_3_Companies_Results.xlsx",
     "max_api_calls_per_key": 250,
-    "min_interval_seconds": 1.2,
+    "min_interval_seconds": 3.2,
     "max_threads": 5
   }
 }
