@@ -786,6 +786,120 @@ Company Processing:
 
 ---
 
+## ⚠️ Known Issues (v2.2)
+
+The following issues were identified during production testing and will be addressed in v2.3:
+
+### 1. API Key Auto-Rotation Failure (CRITICAL)
+
+**Issue:** When the primary API key reaches its monthly limit, the system does not automatically switch to the backup key.
+
+**Impact:**
+- Script may fail mid-run when quota exhausted
+- Backup API keys remain unused (0 calls)
+- Requires manual intervention to continue
+
+**Current Behavior:**
+- Tracker shows: `primary-SerpAPI: 261/250 (104.4%)` ← Over limit
+- Backup key: `2nd API-Backup: 0/250 (0.0%)` ← Never used
+
+**Workaround:**
+- Monitor API usage: `python resources/api_usage_tracker.py --report`
+- If primary key approaching limit, manually edit `config.json` to swap key priorities
+- Or wait for monthly reset before running production scans
+
+**Status:** Under investigation. Switchover logic in `api_usage_tracker.py` needs review.
+
+---
+
+### 2. API Call Counter Inflation (HIGH)
+
+**Issue:** The API usage tracker overcounts actual API calls by ~15-20%.
+
+**Impact:**
+- Tracker reports more calls than actually made to SerpAPI
+- May trigger false "quota exhausted" warnings
+- Affects multi-key rotation decisions
+
+**Example:**
+- Tracker reported: 261 calls
+- SerpAPI dashboard: ~212 actual calls
+- Discrepancy: ~49 calls overcounted
+
+**Suspected Causes:**
+- Failed company lookups incrementing counter
+- Fallback retry attempts being double-counted
+- Circuit breaker failures counting as API calls
+
+**Workaround:**
+- Cross-check with SerpAPI dashboard: https://serpapi.com/dashboard
+- Assume tracker is ~15-20% inflated when planning runs
+- For 137 companies: Expect ~210-220 actual calls (not 260-280)
+
+**Status:** Needs diagnostic logging to identify where overcounting occurs.
+
+---
+
+### 3. High Failure Rate for Small/Unknown Companies (MEDIUM)
+
+**Issue:** 65.7% of companies returned no jobs (90 out of 137).
+
+**Impact:**
+- Lower success rate than expected (34% vs 40-50% expected)
+- Many Tier 99 (unknown size) companies in failed list
+- May indicate matching issues or companies not posting publicly
+
+**Failed Company Examples:**
+- Small manufacturers: A-1 Machining, Accu-Rite Tool, Accuturn Mfg
+- Specialty services: Armoloy, Bodycote, National Peening
+- Division/subsidiary names: TIGHITCO divisions, Triumph divisions
+
+**Possible Causes:**
+1. Small companies don't post jobs on indexed job boards
+2. Company name matching issues (hyphens, Inc/LLC variations)
+3. Companies using recruiting agencies (jobs listed under agency name)
+4. Companies with zero current openings (normal)
+
+**Analysis Needed:**
+- Manual spot-check: Do these companies have jobs on their websites?
+- Review company name normalization logic
+- Test with alternative search strategies
+
+**Status:** Requires investigation. 65% failure is higher than industry baseline.
+
+---
+
+### 4. Job Count Discrepancy in Analytics (LOW)
+
+**Issue:** Analytics report "Total Jobs" count may not match raw data row count, especially for Tier 99 companies.
+
+**Impact:**
+- Minor reporting inconsistency
+- May cause confusion when cross-checking numbers
+
+**Suspected Cause:**
+- Aggregation logic in tier analysis
+- Potential duplicate counting in tier summaries
+
+**Workaround:**
+- Use "Raw Data" sheet in Excel for accurate job count
+- Analytics summaries should be treated as approximate
+
+**Status:** Needs data validation between raw data and analytics aggregations.
+
+---
+
+### Priority for v2.3 Fixes
+
+1. **CRITICAL:** API key auto-rotation (#1)
+2. **HIGH:** API call counter accuracy (#2)
+3. **MEDIUM:** Company matching and failure rate (#3)
+4. **LOW:** Analytics count validation (#4)
+
+**Target:** Address issues #1 and #2 in v2.3 (Q4 2025)
+
+---
+
 ## 📞 Support
 
 ### For Business Questions
