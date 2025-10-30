@@ -8,7 +8,7 @@ Automated competitive intelligence system that tracks hiring activity across 137
 
 **What It Does:**
 
-Tracks hiring activity across 137 Connecticut aerospace companies to identify market trends, growth signals, and business opportunities.
+Tracks hiring activity across 137 Connecticut aerospace companies to identify market trends, classifications, and business job opportunities.
 
 - Monitors job postings in real-time to spot companies actively expanding
 - Analyzes hiring patterns by company size, job category, and region
@@ -17,8 +17,6 @@ Tracks hiring activity across 137 Connecticut aerospace companies to identify ma
 
 **Who Uses It:**
 - Sales teams targeting aerospace manufacturers
-- Economic development and workforce planning agencies
-- Market analysts tracking regional industry health
 
 ---
 
@@ -30,7 +28,7 @@ Evolve from a single-industry tool into a comprehensive market intelligence plat
 
 **Planned Expansions:**
 
-- **Multi-Industry:** Expand beyond aerospace to manufacturing, technology, healthcare, construction, and professional services
+- **Multi-Industry:** Expand beyond aerospace to manufacturing, technology (e.g. Data centers), healthcare, construction, and professional services
 - **Advanced Analytics:** Add predictive forecasting, competitive benchmarking, and trend analysis across industries
 - **Project Intelligence:** Detect capital projects and correlate hiring spikes with contract awards and approved project plans
 - **Geographic Coverage:** Scale from Connecticut to multi-state and eventually national/international markets
@@ -47,8 +45,8 @@ Evolve from a single-industry tool into a comprehensive market intelligence plat
 
 - **Phase 1 (Current):** Single-industry, single-region, manual execution ✅
 - **Phase 2 (Q4 2025 - Q1 2026):** Automation, bug fixes, historical database
-- **Phase 3 (Q2-Q3 2026):** Multi-industry support, web dashboard
-- **Phase 4 (Q4 2026+):** Multi-geography, predictive analytics, enterprise features
+- **Phase 3 (TBD):** Multi-industry support, web dashboard
+- **Phase 4 (TBD):** Multi-geography, predictive analytics, enterprise features
 
 ---
 
