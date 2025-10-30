@@ -6,7 +6,7 @@ Automated competitive intelligence system that tracks hiring activity across 137
 
 ---
 
-## 🧭 Quick Navigation
+## Quick Navigation
 
 **New User?** → [Quick Start](#quick-start-5-minutes) | **Need Help?** → [Troubleshooting](#troubleshooting) | **API Issues?** → [Known Issues](#known-issues-enhancement-opportunities)
 
@@ -14,23 +14,23 @@ Automated competitive intelligence system that tracks hiring activity across 137
 
 ---
 
-## 📚 Table of Contents
+## Table of Contents
 
 ### Getting Started
-- [🚀 Quick Start (5 min)](#quick-start-5-minutes) - Get running fast
-- [⚠️ API Key Requirements](#api-key-requirements) - Essential setup
+- [Quick Start (5 min)](#quick-start-5-minutes) - Get running fast
+- [API Key Requirements](#api-key-requirements) - Essential setup
 
 ### By Your Role
-- [📊 For Business Users](#for-business-users) - Market intelligence, use cases
-- [💻 For Technical Users](#for-technical-users) - Architecture, setup, troubleshooting
+- [For Business Users](#for-business-users) - Market intelligence, use cases
+- [For Technical Users](#for-technical-users) - Architecture, setup, troubleshooting
 
 ### Understanding Results
-- [📊 Understanding the Output](#understanding-the-output) - Excel files, analytics
-- [🔒 Security & Best Practices](#security-best-practices) - API keys, data usage
+- [Understanding the Output](#understanding-the-output) - Excel files, analytics
+- [Security & Best Practices](#security-best-practices) - API keys, data usage
 
 ### Project Information
-- [🛠️ Project Development](#project-development) - Status, roadmap, contributing
-- [📞 Support](#support) - Get help
+- [Project Development](#project-development) - Status, roadmap, contributing
+- [Support](#support) - Get help
 
 ### Technical Details
 <details>
@@ -39,19 +39,19 @@ Automated competitive intelligence system that tracks hiring activity across 137
 - [System Architecture](#system-architecture)
 - [Current System Features](#current-system-features)
 - [Protection System Details](#protection-system-details)
-- [⚠️ Known Issues & Enhancement Opportunities](#known-issues-enhancement-opportunities)
+- [Known Issues & Enhancement Opportunities](#known-issues-enhancement-opportunities)
 - [Configuration](#configuration)
 - [Local Setup Guide](#local-setup-guide)
 - [Troubleshooting](#troubleshooting)
 - [Technical Diagnostics](#technical-diagnostics)
-- [📈 Success Metrics](#success-metrics)
-- [🎓 Learning Resources](#learning-resources)
+- [Success Metrics](#success-metrics)
+- [Learning Resources](#learning-resources)
 
 </details>
 
 ---
 
-## 📊 For Business Users
+## For Business Users
 
 ### What This Tool Does
 
@@ -157,7 +157,7 @@ Monitors real-time job postings from Connecticut's aerospace sector to provide:
 
 ---
 
-## 🚀 Quick Start (5 Minutes)
+## Quick Start (5 Minutes)
 
 ### Prerequisites
 
@@ -265,7 +265,7 @@ python AeroComps.py --profile production
 
 ---
 
-## ⚠️ API Key Requirements
+## API Key Requirements
 
 **IMPORTANT:** For full 137-company production runs, you need sufficient API quota:
 
@@ -314,7 +314,7 @@ python resources/api_usage_tracker.py --report
 
 ---
 
-## 💻 For Technical Users
+## For Technical Users
 
 ### System Architecture
 
@@ -475,7 +475,7 @@ Run `python AeroComps.py` - summary displayed at end
 
 ---
 
-### ⚠️ Known Issues & Enhancement Opportunities
+### Known Issues & Enhancement Opportunities
 
 > **Status:** Identified in v2.2 production testing (Oct 29, 2025). Targeted for v2.3.
 
@@ -578,7 +578,7 @@ python resources/api_usage_tracker.py --report
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 AeroSpace-Alley-Comps/
@@ -782,7 +782,7 @@ pip install pandas openpyxl requests tqdm google-search-results
 
 ---
 
-## 📊 Understanding the Output
+## Understanding the Output
 
 ### Excel File Structure
 
@@ -852,7 +852,7 @@ Company Processing:
 
 ---
 
-## 🔒 Security & Best Practices
+## Security & Best Practices
 
 ### API Key Security
 
@@ -898,7 +898,7 @@ Company Processing:
 
 ---
 
-## 🛠️ Project Development
+## Project Development
 
 ### Project Status
 
@@ -997,7 +997,7 @@ Company Processing:
 
 ---
 
-## 📞 Support
+## Support
 
 ### For Business Questions
 
@@ -1036,7 +1036,7 @@ When reporting issues, include:
 
 ---
 
-## 📚 Additional Documentation
+## Additional Documentation
 
 All documentation has been consolidated into this README. Previous separate documentation files have been integrated:
 
@@ -1052,7 +1052,7 @@ All documentation has been consolidated into this README. Previous separate docu
 
 ---
 
-## 📈 Success Metrics
+## Success Metrics
 
 ### What "Success" Looks Like
 
@@ -1093,7 +1093,7 @@ All documentation has been consolidated into this README. Previous separate docu
 
 ---
 
-## 🎓 Learning Resources
+## Learning Resources
 
 ### Understanding SerpAPI
 
