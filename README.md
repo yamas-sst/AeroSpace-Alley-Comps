@@ -8,7 +8,7 @@ Automated competitive intelligence system that tracks hiring activity across 137
 
 ## 🧭 Quick Navigation
 
-**New User?** → [Quick Start](#-quick-start-5-minutes) | **Need Help?** → [Troubleshooting](#troubleshooting) | **API Issues?** → [Known Issues](#-known-issues--enhancement-opportunities)
+**New User?** → [Quick Start](#-quick-start-5-minutes) | **Need Help?** → [Troubleshooting](#troubleshooting) | **API Issues?** → [Known Issues](#️-known-issues--enhancement-opportunities)
 
 **By Role:** [Business Users](#-for-business-users) | [Technical Users](#-for-technical-users)
 
@@ -44,7 +44,7 @@ Automated competitive intelligence system that tracks hiring activity across 137
 - [Local Setup Guide](#local-setup-guide)
 - [Troubleshooting](#troubleshooting)
 - [Technical Diagnostics](#technical-diagnostics)
-- [📈 Success Metrics](#success-metrics)
+- [📈 Success Metrics](#-success-metrics)
 - [🎓 Learning Resources](#-learning-resources)
 
 </details>
@@ -153,7 +153,7 @@ Monitors real-time job postings from Connecticut's aerospace sector to provide:
 
 </details>
 
-[⬆ Back to Top](#table-of-contents)
+[⬆ Back to Top](#-table-of-contents)
 
 ---
 
@@ -338,7 +338,7 @@ Skilled Trades Filter → Excel Export → Analytics
 
 ---
 
-<details>
+<details id="current-system-features">
 <summary><b>🔧 Current System Features</b> (expand for detailed feature descriptions)</summary>
 
 ### Feature #1: 6-Tier Adaptive Job Cap System
@@ -416,7 +416,7 @@ Skilled Trades Filter → Excel Export → Analytics
 
 ---
 
-<details>
+<details id="protection-system-details">
 <summary><b>🛡️ Protection System Details</b> (7-layer system)</summary>
 
 **Layer 1: Token Bucket Rate Limiter**
@@ -574,7 +574,7 @@ python resources/api_usage_tracker.py --report
 
 **Timeline:** Issues #1 and #2 targeted for Q4 2025
 
-[⬆ Back to Top](#table-of-contents)
+[⬆ Back to Top](#-table-of-contents)
 
 ---
 
@@ -626,7 +626,7 @@ AeroSpace-Alley-Comps/
 
 ---
 
-<details>
+<details id="local-setup-guide">
 <summary><b>🔧 Local Setup Guide</b> (expand for Windows, macOS, Linux, Anaconda, VSCode)</summary>
 
 ## Windows Setup
@@ -710,7 +710,7 @@ python AeroComps.py
 
 ---
 
-<details>
+<details id="troubleshooting">
 <summary><b>🩺 Troubleshooting</b> (expand for common issues & solutions)</summary>
 
 ## "403 Access Denied" from API
@@ -848,7 +848,7 @@ Company Processing:
 - **Overall Success Rate:** 35-50% is normal across all tiers
 - **Rate Limit Errors:** Should be 0 (protection working)
 
-[⬆ Back to Top](#table-of-contents)
+[⬆ Back to Top](#-table-of-contents)
 
 ---
 
@@ -894,7 +894,7 @@ Company Processing:
 - Rate limit conservatively
 - Provide attribution when presenting insights
 
-[⬆ Back to Top](#table-of-contents)
+[⬆ Back to Top](#-table-of-contents)
 
 ---
 
@@ -993,7 +993,7 @@ Company Processing:
 
 </details>
 
-[⬆ Back to Top](#table-of-contents)
+[⬆ Back to Top](#-table-of-contents)
 
 ---
 
