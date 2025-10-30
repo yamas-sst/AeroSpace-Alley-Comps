@@ -4,6 +4,119 @@
 
 Automated competitive intelligence system that tracks hiring activity across 137 Connecticut aerospace companies to identify market trends, growth indicators, and business opportunities.
 
+## Current Use Case
+
+**What It Does Today:**
+
+This tool provides real-time competitive intelligence for the Connecticut aerospace manufacturing sector by:
+
+- **Hiring Activity Monitoring:** Tracks job postings across 137 aerospace companies to identify which businesses are actively expanding
+- **Market Trend Analysis:** Analyzes hiring patterns by company tier, job category, and geographic region to spot industry-wide trends
+- **Growth Signal Detection:** Identifies companies with hiring spikes that indicate new contracts, capability investments, or expansion phases
+- **Sales Intelligence:** Provides actionable insights for B2B sales teams targeting aerospace manufacturers (e.g., tooling suppliers, safety equipment, consulting services)
+- **Workforce Analytics:** Delivers skilled trades demand data (machinists, welders, assemblers, inspectors) for workforce development planning
+
+**Current Capabilities:**
+- 137 Connecticut aerospace companies monitored
+- 6-tier adaptive processing (optimized by company size)
+- 100+ job categories automatically classified
+- Comprehensive Excel analytics with tier breakdowns
+- API usage tracking with multi-key rotation
+- Weekly/daily automated execution
+
+**Active Users:**
+- Sales & business development teams prospecting aerospace manufacturers
+- Market research analysts tracking regional aerospace activity
+- Economic development organizations monitoring industry health
+- Workforce development agencies planning training programs
+
+---
+
+## Vision: Full-Scale Market Analysis Platform
+
+**The Long-Term Goal:**
+
+Transform this aerospace-focused tool into a **comprehensive, cross-industry market intelligence pipeline** that scales across sectors, geographies, and use cases.
+
+### Planned Expansion Areas
+
+**1. Multi-Industry Coverage**
+- **Manufacturing:** Medical devices, electronics, automotive, industrial equipment
+- **Technology:** Software development, cybersecurity, data analytics
+- **Healthcare:** Hospitals, biotech, pharmaceuticals
+- **Construction:** Commercial, residential, infrastructure
+- **Professional Services:** Legal, consulting, accounting, engineering
+
+**2. Advanced Market Analysis**
+- **Trend Forecasting:** Predictive analytics on hiring patterns to forecast market shifts 3-6 months ahead
+- **Competitive Benchmarking:** Compare hiring velocity, job categories, and compensation trends across competitors
+- **Economic Indicators:** Correlate hiring data with GDP growth, contract awards, and economic indicators
+- **Geographic Expansion Tracking:** Identify companies opening new facilities or expanding into new markets
+- **Skills Gap Analysis:** Map emerging skill requirements vs. workforce availability by region
+
+**3. Project Planning Intelligence**
+- **Capital Project Detection:** Identify companies posting roles that signal major capital investments (project managers, construction supervisors, commissioning engineers)
+- **Contract Award Correlation:** Cross-reference hiring spikes with publicly announced contracts, grants, and project awards
+- **Timeline Estimation:** Estimate project timelines based on hiring phases (design → construction → operations)
+- **Supply Chain Mapping:** Identify supplier network expansions based on coordinated hiring patterns
+
+**4. Enhanced Analytics & Reporting**
+- **Interactive Dashboards:** Web-based visualization platform with real-time updates
+- **Custom Alerts:** Configurable notifications for specific triggers (e.g., "Alert me when Company X posts 5+ jobs")
+- **Historical Trend Database:** Multi-year tracking to identify cyclical patterns and seasonal trends
+- **Comparative Reports:** Side-by-side industry comparisons (e.g., aerospace vs. medical device hiring trends)
+- **Export Integrations:** Direct exports to CRM systems (Salesforce, HubSpot), BI tools (Tableau, Power BI)
+
+**5. Multi-Geography Support**
+- **Regional Expansion:** Cover multiple states, countries, or global regions
+- **Economic Zone Analysis:** Compare hiring across economic development zones, enterprise zones, or industrial parks
+- **Remote Work Tracking:** Identify fully remote positions to understand distributed workforce trends
+
+**6. Data Enrichment**
+- **Company Financials:** Integrate revenue, funding rounds, and financial health data
+- **Leadership Changes:** Track executive hiring and departures as business signals
+- **Patent Filings:** Correlate R&D hiring with patent activity to spot innovation trends
+- **News & Press Releases:** Auto-link hiring activity to company announcements and media coverage
+
+### Target Use Cases (Vision)
+
+**For Enterprise Sales Teams:**
+- Identify high-propensity leads across multiple industries based on real-time hiring signals
+- Prioritize accounts with the highest growth indicators
+- Tailor outreach based on specific capability investments (e.g., "I see you're hiring automation engineers...")
+
+**For Private Equity & Investors:**
+- Monitor portfolio company health through hiring trends
+- Identify acquisition targets showing growth signals
+- Perform due diligence by analyzing workforce expansion patterns
+
+**For Economic Development Agencies:**
+- Track regional employment trends across all major industries
+- Measure effectiveness of incentive programs by monitoring subsequent hiring
+- Identify at-risk companies (declining hiring) for early intervention
+
+**For Workforce Development Organizations:**
+- Predict future skills demand 6-12 months ahead
+- Design training programs aligned with emerging industry needs
+- Track ROI of training initiatives by measuring local hiring in target skills
+
+**For Market Research Firms:**
+- Deliver proprietary hiring datasets as a premium intelligence product
+- Provide clients with early indicators of market shifts
+- Create industry benchmark reports based on hiring velocity data
+
+### Technical Roadmap
+
+**Phase 1 (Current):** Single-industry (aerospace), single-region (Connecticut), manual execution ✅
+
+**Phase 2 (Q4 2025 - Q1 2026):** Bug fixes, automated scheduling, historical tracking database
+
+**Phase 3 (Q2-Q3 2026):** Multi-industry support, web dashboard, enhanced analytics
+
+**Phase 4 (Q4 2026 - Q1 2027):** Multi-geography, data enrichment integrations, predictive analytics
+
+**Phase 5 (2027+):** Full enterprise platform with API access, white-label options, SaaS deployment
+
 ---
 
 ## Table of Contents
