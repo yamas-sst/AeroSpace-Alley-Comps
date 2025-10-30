@@ -6,14 +6,6 @@ Automated competitive intelligence system that tracks hiring activity across 137
 
 ---
 
-## Quick Navigation
-
-**New User?** → [Quick Start](#quick-start-5-minutes) | **Need Help?** → [Troubleshooting](#troubleshooting) | **API Issues?** → [Known Issues](#known-issues-enhancement-opportunities)
-
-**By Role:** [Business Users](#for-business-users) | [Technical Users](#for-technical-users)
-
----
-
 ## Table of Contents
 
 ### Getting Started
