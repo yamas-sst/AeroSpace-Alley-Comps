@@ -8,29 +8,29 @@ Automated competitive intelligence system that tracks hiring activity across 137
 
 ## 🧭 Quick Navigation
 
-**New User?** → [Quick Start](#-quick-start-5-minutes) | **Need Help?** → [Troubleshooting](#troubleshooting) | **API Issues?** → [Known Issues](#️-known-issues--enhancement-opportunities)
+**New User?** → [Quick Start](#quick-start-5-minutes) | **Need Help?** → [Troubleshooting](#troubleshooting) | **API Issues?** → [Known Issues](#known-issues-enhancement-opportunities)
 
-**By Role:** [Business Users](#-for-business-users) | [Technical Users](#-for-technical-users)
+**By Role:** [Business Users](#for-business-users) | [Technical Users](#for-technical-users)
 
 ---
 
 ## 📚 Table of Contents
 
 ### Getting Started
-- [🚀 Quick Start (5 min)](#-quick-start-5-minutes) - Get running fast
-- [⚠️ API Key Requirements](#️-api-key-requirements) - Essential setup
+- [🚀 Quick Start (5 min)](#quick-start-5-minutes) - Get running fast
+- [⚠️ API Key Requirements](#api-key-requirements) - Essential setup
 
 ### By Your Role
-- [📊 For Business Users](#-for-business-users) - Market intelligence, use cases
-- [💻 For Technical Users](#-for-technical-users) - Architecture, setup, troubleshooting
+- [📊 For Business Users](#for-business-users) - Market intelligence, use cases
+- [💻 For Technical Users](#for-technical-users) - Architecture, setup, troubleshooting
 
 ### Understanding Results
-- [📊 Understanding the Output](#-understanding-the-output) - Excel files, analytics
-- [🔒 Security & Best Practices](#-security--best-practices) - API keys, data usage
+- [📊 Understanding the Output](#understanding-the-output) - Excel files, analytics
+- [🔒 Security & Best Practices](#security-best-practices) - API keys, data usage
 
 ### Project Information
-- [🛠️ Project Development](#-project-development) - Status, roadmap, contributing
-- [📞 Support](#-support) - Get help
+- [🛠️ Project Development](#project-development) - Status, roadmap, contributing
+- [📞 Support](#support) - Get help
 
 ### Technical Details
 <details>
@@ -39,13 +39,13 @@ Automated competitive intelligence system that tracks hiring activity across 137
 - [System Architecture](#system-architecture)
 - [Current System Features](#current-system-features)
 - [Protection System Details](#protection-system-details)
-- [⚠️ Known Issues & Enhancement Opportunities](#-known-issues--enhancement-opportunities)
+- [⚠️ Known Issues & Enhancement Opportunities](#known-issues-enhancement-opportunities)
 - [Configuration](#configuration)
 - [Local Setup Guide](#local-setup-guide)
 - [Troubleshooting](#troubleshooting)
 - [Technical Diagnostics](#technical-diagnostics)
-- [📈 Success Metrics](#-success-metrics)
-- [🎓 Learning Resources](#-learning-resources)
+- [📈 Success Metrics](#success-metrics)
+- [🎓 Learning Resources](#learning-resources)
 
 </details>
 
@@ -153,7 +153,7 @@ Monitors real-time job postings from Connecticut's aerospace sector to provide:
 
 </details>
 
-[⬆ Back to Top](#-table-of-contents)
+[⬆ Back to Top](#table-of-contents)
 
 ---
 
@@ -574,7 +574,7 @@ python resources/api_usage_tracker.py --report
 
 **Timeline:** Issues #1 and #2 targeted for Q4 2025
 
-[⬆ Back to Top](#-table-of-contents)
+[⬆ Back to Top](#table-of-contents)
 
 ---
 
@@ -848,7 +848,7 @@ Company Processing:
 - **Overall Success Rate:** 35-50% is normal across all tiers
 - **Rate Limit Errors:** Should be 0 (protection working)
 
-[⬆ Back to Top](#-table-of-contents)
+[⬆ Back to Top](#table-of-contents)
 
 ---
 
@@ -894,7 +894,7 @@ Company Processing:
 - Rate limit conservatively
 - Provide attribution when presenting insights
 
-[⬆ Back to Top](#-table-of-contents)
+[⬆ Back to Top](#table-of-contents)
 
 ---
 
@@ -993,7 +993,7 @@ Company Processing:
 
 </details>
 
-[⬆ Back to Top](#-table-of-contents)
+[⬆ Back to Top](#table-of-contents)
 
 ---
 
