@@ -4,9 +4,92 @@
 
 Automated competitive intelligence system that tracks hiring activity across 137 Connecticut aerospace companies to identify market trends, growth indicators, and business opportunities.
 
+## Current Use Case
+
+**What It Does:**
+
+Tracks hiring activity across 137 Connecticut aerospace companies to identify market trends, growth signals, and business opportunities.
+
+- Monitors job postings in real-time to spot companies actively expanding
+- Analyzes hiring patterns by company size, job category, and region
+- Automatically classifies 100+ job types with tier-based analytics
+- Provides Excel reports with actionable intelligence
+
+**Who Uses It:**
+- Sales teams targeting aerospace manufacturers
+- Economic development and workforce planning agencies
+- Market analysts tracking regional industry health
+
 ---
 
-## 📊 For Business Users
+## Vision: Full-Scale Market Analysis Platform
+
+**The Long-Term Goal:**
+
+Evolve from a single-industry tool into a comprehensive market intelligence platform that tracks hiring trends across multiple industries, geographies, and use cases.
+
+**Planned Expansions:**
+
+- **Multi-Industry:** Expand beyond aerospace to manufacturing, technology, healthcare, construction, and professional services
+- **Advanced Analytics:** Add predictive forecasting, competitive benchmarking, and trend analysis across industries
+- **Project Intelligence:** Detect capital projects and correlate hiring spikes with contract awards and approved project plans
+- **Geographic Coverage:** Scale from Connecticut to multi-state and eventually national/international markets
+- **Enhanced Reporting:** Web dashboards, custom alerts, historical tracking, and CRM/BI tool integrations
+
+**Example Use Cases:**
+
+- **Sales Teams:** Identify high-growth companies across industries before competitors do
+- **Investors:** Monitor portfolio health and spot acquisition targets through hiring signals
+- **Agencies:** Track regional employment trends and measure economic development program effectiveness
+- **Market Research:** Provide early indicators of market shifts and industry benchmark data
+
+**Roadmap:**
+
+- **Phase 1 (Current):** Single-industry, single-region, manual execution ✅
+- **Phase 2 (Q4 2025 - Q1 2026):** Automation, bug fixes, historical database
+- **Phase 3 (Q2-Q3 2026):** Multi-industry support, web dashboard
+- **Phase 4 (Q4 2026+):** Multi-geography, predictive analytics, enterprise features
+
+---
+
+## Table of Contents
+
+### Getting Started
+- [Quick Start (5 min)](#quick-start-5-minutes) - Get running fast
+- [API Key Requirements](#api-key-requirements) - Essential setup
+
+### By Your Role
+- [For Business Users](#for-business-users) - Market intelligence, use cases
+- [For Technical Users](#for-technical-users) - Architecture, setup, troubleshooting
+
+### Understanding Results
+- [Understanding the Output](#understanding-the-output) - Excel files, analytics
+- [Security & Best Practices](#security-best-practices) - API keys, data usage
+
+### Project Information
+- [Project Development](#project-development) - Status, roadmap, contributing
+- [Support](#support) - Get help
+
+### Technical Details
+<details>
+<summary><b>Expand full technical contents</b></summary>
+
+- [System Architecture](#system-architecture)
+- [Current System Features](#current-system-features)
+- [Protection System Details](#protection-system-details)
+- [Known Issues & Enhancement Opportunities](#known-issues-enhancement-opportunities)
+- [Configuration](#configuration)
+- [Local Setup Guide](#local-setup-guide)
+- [Troubleshooting](#troubleshooting)
+- [Technical Diagnostics](#technical-diagnostics)
+- [Success Metrics](#success-metrics)
+- [Learning Resources](#learning-resources)
+
+</details>
+
+---
+
+## For Business Users
 
 ### What This Tool Does
 
@@ -51,7 +134,68 @@ Monitors real-time job postings from Connecticut's aerospace sector to provide:
 
 ---
 
-## 🚀 Quick Start (5 Minutes)
+<details>
+<summary><b>📊 Use Cases & Applications</b> (expand for detailed examples)</summary>
+
+### Sales Intelligence
+
+**Lead Qualification:**
+- Companies with 5+ job postings = active growth, high priority
+- Companies hiring specialized roles (CNC, inspection) = capability investment
+- Hiring spikes (vs. historical) = new contracts, buying window open
+
+**Example Workflow:**
+1. Run weekly scan
+2. Filter for companies with 3+ new postings
+3. Research recent contracts/awards
+4. Tailor pitch: "I see you're expanding [specific capability]..."
+
+### Market Analysis
+
+**Quarterly Trends Report:**
+- Compare hiring by company tier (Tier-1 vs. small suppliers)
+- Track skill demand trends (CNC vs. manual machining vs. assembly)
+- Geographic shifts (East Hartford vs. other regions)
+- Seasonal patterns (Q1 hiring surge, Q3 slowdown)
+
+**Competitive Benchmarking:**
+- Your customer vs. their competitors
+- Your region vs. other aerospace hubs
+- Skilled trades availability vs. demand
+
+### Workforce Planning
+
+**Recruitment Strategy:**
+- Which roles are hardest to fill (most postings, longest duration)
+- Salary benchmarking (when data available)
+- Geographic concentration of talent
+- Competition for specific skills
+
+**Training Program Development:**
+- High-demand skills for curriculum design
+- Partnership opportunities with hiring companies
+- Apprenticeship program targeting
+
+### Business Development
+
+**Partnership Identification:**
+- Companies hiring complementary skills (you do A, they need B)
+- Geographic proximity for supplier relationships
+- Growth trajectory alignment (both scaling up)
+- Technology investment signals (automation, advanced manufacturing)
+
+**M&A Target Screening:**
+- Rapid hiring = growth
+- High-value role hiring = capability building
+- Sustained activity = financial health
+
+</details>
+
+[⬆ Back to Top](#table-of-contents)
+
+---
+
+## Quick Start (5 Minutes)
 
 ### Prerequisites
 
@@ -159,7 +303,7 @@ python AeroComps.py --profile production
 
 ---
 
-## ⚠️ API Key Requirements
+## API Key Requirements
 
 **IMPORTANT:** For full 137-company production runs, you need sufficient API quota:
 
@@ -208,7 +352,7 @@ python resources/api_usage_tracker.py --report
 
 ---
 
-## 💻 For Technical Users
+## For Technical Users
 
 ### System Architecture
 
@@ -230,9 +374,12 @@ Skilled Trades Filter → Excel Export → Analytics
 - **Health Monitoring:** Real-time success rate tracking with tier analytics
 - **Audit Logging:** Complete API call history
 
-### Current System Features
+---
 
-**Feature #1: 6-Tier Adaptive Job Cap System**
+<details id="current-system-features">
+<summary><b>🔧 Current System Features</b> (expand for detailed feature descriptions)</summary>
+
+### Feature #1: 6-Tier Adaptive Job Cap System
 - **Implementation:** 6-tier company classification by employee count
 - **Tier 1 (10,000+ employees):** 80 job cap (e.g., Pratt & Whitney, Collins Aerospace)
 - **Tier 2 (1,000-9,999):** 40 job cap (e.g., GKN Aerospace, Barnes Aerospace)
@@ -282,6 +429,10 @@ Skilled Trades Filter → Excel Export → Analytics
   - Production: `Aerospace_Alley_SkilledTrades_Jobs.xlsx` (standard name)
 - **Impact:** Simpler configuration, clear testing vs production separation, safer workflow
 
+</details>
+
+---
+
 ### Configuration
 
 **Safe Settings (Tested & Working):**
@@ -301,7 +452,10 @@ Skilled Trades Filter → Excel Export → Analytics
 - 137 companies = ~260-280 API calls total
 - **Recommended for production:** 2 free API keys (250 each = 500 total) OR 1 paid key
 
-### Protection System Details
+---
+
+<details id="protection-system-details">
+<summary><b>🛡️ Protection System Details</b> (7-layer system)</summary>
 
 **Layer 1: Token Bucket Rate Limiter**
 - Capacity: 60 calls/hour
@@ -338,6 +492,10 @@ Skilled Trades Filter → Excel Export → Analytics
 - Enforces minimum intervals
 - Warns on aggressive configurations
 
+</details>
+
+---
+
 ### Technical Diagnostics
 
 **Check API Access:**
@@ -355,7 +513,110 @@ Run `python AeroComps.py` - summary displayed at end
 
 ---
 
-## 📁 Project Structure
+### Known Issues & Enhancement Opportunities
+
+> **Status:** Identified in v2.2 production testing (Oct 29, 2025). Targeted for v2.3.
+
+#### Quick Summary
+
+| # | Issue | Severity | Status | Workaround Available |
+|---|-------|----------|--------|---------------------|
+| 1 | API Key Auto-Rotation Failure | 🔴 CRITICAL | Under investigation | ✅ Manual key swap |
+| 2 | API Call Counter Inflation (~15-20%) | 🟠 HIGH | Needs diagnostic logging | ✅ Check SerpAPI dashboard |
+| 3 | High Failure Rate (65.7% for small companies) | 🟡 MEDIUM | Analyzing root cause | ⚠️ Expected for Tier 99 |
+| 4 | Analytics Count Discrepancy | 🟢 LOW | Data validation needed | ✅ Use Raw Data sheet |
+
+---
+
+<details>
+<summary><b>🔴 #1: API Key Auto-Rotation Failure (CRITICAL)</b></summary>
+
+**Problem:** System does not automatically switch to backup API key when primary exhausted.
+
+**Production Evidence:**
+- Primary key: `261/250` (104.4% over limit)
+- Backup key: `0/250` (never activated)
+
+**Impact:** Script fails mid-run when quota exhausted.
+
+**Workaround:**
+```bash
+# Monitor usage before runs
+python resources/api_usage_tracker.py --report
+
+# If primary near limit, manually swap priorities in config.json
+```
+
+**Fix Target:** v2.3 - Review `api_usage_tracker.py` switchover logic
+
+</details>
+
+<details>
+<summary><b>🟠 #2: API Call Counter Inflation (~15-20%) (HIGH)</b></summary>
+
+**Problem:** Tracker overcounts actual API usage.
+
+**Production Evidence:**
+- Tracker reported: 261 calls
+- SerpAPI actual: ~212 calls
+- Overcounting: ~49 calls (18.8%)
+
+**Impact:** False quota warnings, premature rotation triggers.
+
+**Workaround:** Cross-check with [SerpAPI dashboard](https://serpapi.com/dashboard) for actual usage.
+
+**Fix Target:** v2.3 - Add diagnostic logging to identify overcounting source
+
+</details>
+
+<details>
+<summary><b>🟡 #3: High Failure Rate for Small/Unknown Companies (MEDIUM)</b></summary>
+
+**Problem:** 90 of 137 companies (65.7%) returned no jobs.
+
+**Analysis:**
+- Success rate: 34.3% (expected: 40-50%)
+- Predominantly Tier 99 (unknown size) companies
+- Small manufacturers often don't post on indexed job boards
+
+**Possible Causes:**
+1. Companies not actively hiring
+2. Name matching issues (hyphens, LLC/Inc variations)
+3. Using recruiting agencies (jobs under agency name)
+
+**Enhancement Opportunity:** Improve company name normalization, test alternative search strategies.
+
+**Fix Target:** v2.3 - Investigate matching algorithm
+
+</details>
+
+<details>
+<summary><b>🟢 #4: Analytics Count Discrepancy (LOW)</b></summary>
+
+**Problem:** Analytics totals may not match raw data row counts.
+
+**Workaround:** Use "Raw Data" sheet in Excel for accurate counts.
+
+**Fix Target:** v2.3 - Validate tier aggregation logic
+
+</details>
+
+---
+
+#### Development Priorities (v2.3)
+
+1. **CRITICAL:** Fix API key auto-rotation
+2. **HIGH:** Fix API call counter accuracy
+3. **MEDIUM:** Improve company matching & name normalization
+4. **LOW:** Validate analytics aggregations
+
+**Timeline:** Issues #1 and #2 targeted for Q4 2025
+
+[⬆ Back to Top](#table-of-contents)
+
+---
+
+## Project Structure
 
 ```
 AeroSpace-Alley-Comps/
@@ -401,9 +662,12 @@ AeroSpace-Alley-Comps/
 
 ---
 
-## 🔧 Local Setup Guide
+---
 
-### Windows Setup
+<details id="local-setup-guide">
+<summary><b>🔧 Local Setup Guide</b> (expand for Windows, macOS, Linux, Anaconda, VSCode)</summary>
+
+## Windows Setup
 
 **1. Install Python**
 - Download from [python.org](https://python.org/downloads/)
@@ -480,11 +744,14 @@ python AeroComps.py
 - See VSCODE_BEGINNER_GUIDE.md for step-by-step walkthrough
 - Covers: Installation, setup, running, debugging
 
+</details>
+
 ---
 
-## 🩺 Troubleshooting
+<details id="troubleshooting">
+<summary><b>🩺 Troubleshooting</b> (expand for common issues & solutions)</summary>
 
-### "403 Access Denied" from API
+## "403 Access Denied" from API
 
 **Causes:**
 1. Invalid API key
@@ -549,9 +816,11 @@ pip install -r resources/requirements.txt
 pip install pandas openpyxl requests tqdm google-search-results
 ```
 
+</details>
+
 ---
 
-## 📊 Understanding the Output
+## Understanding the Output
 
 ### Excel File Structure
 
@@ -617,65 +886,11 @@ Company Processing:
 - **Overall Success Rate:** 35-50% is normal across all tiers
 - **Rate Limit Errors:** Should be 0 (protection working)
 
----
-
-## 🎯 Use Cases & Applications
-
-### Sales Intelligence
-
-**Lead Qualification:**
-- Companies with 5+ job postings = active growth, high priority
-- Companies hiring specialized roles (CNC, inspection) = capability investment
-- Hiring spikes (vs. historical) = new contracts, buying window open
-
-**Example Workflow:**
-1. Run weekly scan
-2. Filter for companies with 3+ new postings
-3. Research recent contracts/awards
-4. Tailor pitch: "I see you're expanding [specific capability]..."
-
-### Market Analysis
-
-**Quarterly Trends Report:**
-- Compare hiring by company tier (Tier-1 vs. small suppliers)
-- Track skill demand trends (CNC vs. manual machining vs. assembly)
-- Geographic shifts (East Hartford vs. other regions)
-- Seasonal patterns (Q1 hiring surge, Q3 slowdown)
-
-**Competitive Benchmarking:**
-- Your customer vs. their competitors
-- Your region vs. other aerospace hubs
-- Skilled trades availability vs. demand
-
-### Workforce Planning
-
-**Recruitment Strategy:**
-- Which roles are hardest to fill (most postings, longest duration)
-- Salary benchmarking (when data available)
-- Geographic concentration of talent
-- Competition for specific skills
-
-**Training Program Development:**
-- High-demand skills for curriculum design
-- Partnership opportunities with hiring companies
-- Apprenticeship program targeting
-
-### Business Development
-
-**Partnership Identification:**
-- Companies hiring complementary skills (you do A, they need B)
-- Geographic proximity for supplier relationships
-- Growth trajectory alignment (both scaling up)
-- Technology investment signals (automation, advanced manufacturing)
-
-**M&A Target Screening:**
-- Rapid hiring = growth
-- High-value role hiring = capability building
-- Sustained activity = financial health
+[⬆ Back to Top](#table-of-contents)
 
 ---
 
-## 🔒 Security & Best Practices
+## Security & Best Practices
 
 ### API Key Security
 
@@ -717,9 +932,11 @@ Company Processing:
 - Rate limit conservatively
 - Provide attribution when presenting insights
 
+[⬆ Back to Top](#table-of-contents)
+
 ---
 
-## 🛠️ Development & Contribution
+## Project Development
 
 ### Project Status
 
@@ -750,25 +967,26 @@ Company Processing:
 
 ### Roadmap
 
-**Short-Term (1-2 weeks):**
+**v2.3 (Q4 2025) - Bug Fixes:**
+- Fix API key auto-rotation failure
+- Fix API call counter inflation
+- Improve company name matching
+
+**v2.4 (Q1 2026) - Enhancements:**
 - Automated weekly scheduling
 - Historical tracking database
 - Change detection (new jobs, removed jobs)
 - Email notifications for significant changes
 
-**Medium-Term (1-3 months):**
+**v3.0 (Q2-Q3 2026) - Major Features:**
 - Alternative data sources (Adzuna API, direct scraping)
 - Salary extraction and normalization
 - Geographic filtering and radius search
-- Enhanced analytics dashboard
-
-**Long-Term (3-6 months):**
 - Web interface for non-technical users
-- Real-time monitoring and alerts
-- Predictive analytics (hiring trends, market forecasts)
-- Integration with CRM systems (Salesforce, HubSpot)
 
-### Contributing
+---
+
+### Contributing Guidelines
 
 **If you're extending this project:**
 
@@ -779,128 +997,45 @@ Company Processing:
 5. **Commit often** with descriptive messages
 
 **Useful extensions:**
-- Additional data sources (see resources/rate_limit_protection.py for integration examples)
-- Enhanced analytics (see resources/analytics.py)
+- Additional data sources (see `resources/rate_limit_protection.py` for integration examples)
+- Enhanced analytics (see `resources/analytics.py`)
 - Automation scheduling (cron jobs, Task Scheduler)
 - Database storage (SQLite, PostgreSQL)
 
 ---
 
-## ⚠️ Known Issues (v2.2)
+<details>
+<summary><b>📈 Success Metrics</b> (expand for detailed performance data)</summary>
 
-The following issues were identified during production testing and will be addressed in v2.3:
+### What "Success" Looks Like
 
-### 1. API Key Auto-Rotation Failure (CRITICAL)
+**Technical Success:**
+- ✅ 100% API call success rate (no 400/403/429 errors)
+- ✅ Protection system prevents rate limits (no circuit breaker triggers)
+- ✅ Completes 137-company run in ~12-15 minutes
+- ✅ Finds 100-300+ jobs total (35-50% of companies hiring)
 
-**Issue:** When the primary API key reaches its monthly limit, the system does not automatically switch to the backup key.
+**Business Success:**
+- ✅ Actionable insights for sales team (3-5 high-priority leads per week)
+- ✅ Market trend identification (quarterly hiring patterns visible)
+- ✅ Time savings (10+ hours/week → 5 minutes automated)
 
-**Impact:**
-- Script may fail mid-run when quota exhausted
-- Backup API keys remain unused (0 calls)
-- Requires manual intervention to continue
+### Current Performance
 
-**Current Behavior:**
-- Tracker shows: `primary-SerpAPI: 261/250 (104.4%)` ← Over limit
-- Backup key: `2nd API-Backup: 0/250 (0.0%)` ← Never used
+**Production Run (Oct 29, 2025):**
+- Companies Processed: 137
+- Success Rate: 34.3% (47 companies with jobs)
+- Jobs Found: 200-300+ total
+- API Calls: ~212 actual (tracker showed 261)
+- Runtime: ~12-15 minutes
 
-**Workaround:**
-- Monitor API usage: `python resources/api_usage_tracker.py --report`
-- If primary key approaching limit, manually edit `config.json` to swap key priorities
-- Or wait for monthly reset before running production scans
+</details>
 
-**Status:** Under investigation. Switchover logic in `api_usage_tracker.py` needs review.
-
----
-
-### 2. API Call Counter Inflation (HIGH)
-
-**Issue:** The API usage tracker overcounts actual API calls by ~15-20%.
-
-**Impact:**
-- Tracker reports more calls than actually made to SerpAPI
-- May trigger false "quota exhausted" warnings
-- Affects multi-key rotation decisions
-
-**Example:**
-- Tracker reported: 261 calls
-- SerpAPI dashboard: ~212 actual calls
-- Discrepancy: ~49 calls overcounted
-
-**Suspected Causes:**
-- Failed company lookups incrementing counter
-- Fallback retry attempts being double-counted
-- Circuit breaker failures counting as API calls
-
-**Workaround:**
-- Cross-check with SerpAPI dashboard: https://serpapi.com/dashboard
-- Assume tracker is ~15-20% inflated when planning runs
-- For 137 companies: Expect ~210-220 actual calls (not 260-280)
-
-**Status:** Needs diagnostic logging to identify where overcounting occurs.
+[⬆ Back to Top](#table-of-contents)
 
 ---
 
-### 3. High Failure Rate for Small/Unknown Companies (MEDIUM)
-
-**Issue:** 65.7% of companies returned no jobs (90 out of 137).
-
-**Impact:**
-- Lower success rate than expected (34% vs 40-50% expected)
-- Many Tier 99 (unknown size) companies in failed list
-- May indicate matching issues or companies not posting publicly
-
-**Failed Company Examples:**
-- Small manufacturers: A-1 Machining, Accu-Rite Tool, Accuturn Mfg
-- Specialty services: Armoloy, Bodycote, National Peening
-- Division/subsidiary names: TIGHITCO divisions, Triumph divisions
-
-**Possible Causes:**
-1. Small companies don't post jobs on indexed job boards
-2. Company name matching issues (hyphens, Inc/LLC variations)
-3. Companies using recruiting agencies (jobs listed under agency name)
-4. Companies with zero current openings (normal)
-
-**Analysis Needed:**
-- Manual spot-check: Do these companies have jobs on their websites?
-- Review company name normalization logic
-- Test with alternative search strategies
-
-**Status:** Requires investigation. 65% failure is higher than industry baseline.
-
----
-
-### 4. Job Count Discrepancy in Analytics (LOW)
-
-**Issue:** Analytics report "Total Jobs" count may not match raw data row count, especially for Tier 99 companies.
-
-**Impact:**
-- Minor reporting inconsistency
-- May cause confusion when cross-checking numbers
-
-**Suspected Cause:**
-- Aggregation logic in tier analysis
-- Potential duplicate counting in tier summaries
-
-**Workaround:**
-- Use "Raw Data" sheet in Excel for accurate job count
-- Analytics summaries should be treated as approximate
-
-**Status:** Needs data validation between raw data and analytics aggregations.
-
----
-
-### Priority for v2.3 Fixes
-
-1. **CRITICAL:** API key auto-rotation (#1)
-2. **HIGH:** API call counter accuracy (#2)
-3. **MEDIUM:** Company matching and failure rate (#3)
-4. **LOW:** Analytics count validation (#4)
-
-**Target:** Address issues #1 and #2 in v2.3 (Q4 2025)
-
----
-
-## 📞 Support
+## Support
 
 ### For Business Questions
 
@@ -939,7 +1074,7 @@ When reporting issues, include:
 
 ---
 
-## 📚 Additional Documentation
+## Additional Documentation
 
 All documentation has been consolidated into this README. Previous separate documentation files have been integrated:
 
@@ -955,7 +1090,7 @@ All documentation has been consolidated into this README. Previous separate docu
 
 ---
 
-## 📈 Success Metrics
+## Success Metrics
 
 ### What "Success" Looks Like
 
@@ -996,7 +1131,7 @@ All documentation has been consolidated into this README. Previous separate docu
 
 ---
 
-## 🎓 Learning Resources
+## Learning Resources
 
 ### Understanding SerpAPI
 
