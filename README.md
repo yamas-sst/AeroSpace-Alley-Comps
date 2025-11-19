@@ -1,4 +1,4 @@
-# Aerospace Alley Job Scanner
+# Aerospace Alley Job Scanner Tool
 
 **Market Intelligence Tool for Connecticut Aerospace Manufacturing**
 
