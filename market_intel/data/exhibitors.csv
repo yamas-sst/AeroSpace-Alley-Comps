@@ -1,0 +1,4 @@
+company_name,booth_number,address,city,state,zip,country,website,description,category
+"SpaceX","A-101","1 Rocket Rd","Hawthorne","CA","90250","USA","https://spacex.com","Space transportation company","Launch Provider"
+"Blue Origin","A-205","21601 76th Ave S","Kent","WA","98032","USA","https://blueorigin.com","Aerospace manufacturer","Launch Provider"
+"Lockheed Martin","B-310","6801 Rockledge Dr","Bethesda","MD","20817","USA","https://lockheedmartin.com","Aerospace and defense company","Prime Contractor"

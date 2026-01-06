@@ -1,0 +1,2 @@
+company_name,booth_number,address,city,state,zip,country,website,description,category
+"Example Company","A-101","123 Main St","Houston","TX","77001","USA","https://example.com","Description here","Category"
