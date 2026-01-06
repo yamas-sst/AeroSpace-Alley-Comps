@@ -1,4 +1,25 @@
 company_name,booth_number,address,city,state,zip,country,website,description,category
-"SpaceX","A-101","1 Rocket Rd","Hawthorne","CA","90250","USA","https://spacex.com","Space transportation company","Launch Provider"
-"Blue Origin","A-205","21601 76th Ave S","Kent","WA","98032","USA","https://blueorigin.com","Aerospace manufacturer","Launch Provider"
-"Lockheed Martin","B-310","6801 Rockledge Dr","Bethesda","MD","20817","USA","https://lockheedmartin.com","Aerospace and defense company","Prime Contractor"
+Lockheed Martin,,6801 Rockledge Dr,Bethesda,MD,20817.0,USA,https://lockheedmartin.com,Aerospace and defense company,Prime Contractor
+Northrop Grumman,,2980 Fairview Park Dr,Falls Church,VA,22042.0,USA,https://northropgrumman.com,Global aerospace and defense,Prime Contractor
+Boeing,,929 Long Bridge Dr,Arlington,VA,22202.0,USA,https://boeing.com,Aerospace manufacturer,Prime Contractor
+Raytheon Technologies,,1000 Wilson Blvd,Arlington,VA,22209.0,USA,https://rtx.com,Aerospace and defense,Prime Contractor
+L3Harris Technologies,,1025 W NASA Blvd,Melbourne,FL,32919.0,USA,https://l3harris.com,Aerospace and defense technology,Prime Contractor
+SpaceX,,1 Rocket Rd,Hawthorne,CA,90250.0,USA,https://spacex.com,Space transportation company,Launch Provider
+Blue Origin,,21601 76th Ave S,Kent,WA,98032.0,USA,https://blueorigin.com,Aerospace manufacturer and spaceflight services,Launch Provider
+United Launch Alliance,,9501 E Panorama Cir,Centennial,CO,80112.0,USA,https://ulalaunch.com,Launch services provider,Launch Provider
+Rocket Lab,,3881 McGowen St,Long Beach,CA,90808.0,USA,https://rocketlabusa.com,Small satellite launch provider,Launch Provider
+Relativity Space,,3500 E Washington Blvd,Los Angeles,CA,90023.0,USA,https://relativityspace.com,3D-printed rockets manufacturer,Launch Provider
+Viasat,,6155 El Camino Real,Carlsbad,CA,92009.0,USA,https://viasat.com,Satellite communications,Satellite Operator
+SES,,1129 20th St NW,Washington,DC,20036.0,USA,https://ses.com,Satellite operator,Satellite Operator
+Intelsat,,7900 Tysons One Pl,McLean,VA,22102.0,USA,https://intelsat.com,Satellite services operator,Satellite Operator
+Iridium Communications,,1750 Tysons Blvd,McLean,VA,22102.0,USA,https://iridium.com,Satellite communications network,Satellite Operator
+Axiom Space,,1290 Hercules Ave,Houston,TX,77058.0,USA,https://axiomspace.com,Commercial space station developer,Space Tech
+Sierra Space,,1722 Boxelder St,Louisville,CO,80027.0,USA,https://sierraspace.com,Commercial space company,Space Tech
+Astroscale,,,Denver,CO,,USA,https://astroscale.com,Space debris removal,Space Tech
+Planet Labs,,645 Harrison St,San Francisco,CA,94107.0,USA,https://planet.com,Earth imaging satellites,Space Tech
+Spire Global,,1825 S Grant St,San Mateo,CA,94402.0,USA,https://spire.com,Space-based data analytics,Space Tech
+Jacobs,,1999 Bryan St,Dallas,TX,75201.0,USA,https://jacobs.com,Engineering services,Engineering Services
+KBR,,601 Jefferson St,Houston,TX,77002.0,USA,https://kbr.com,Engineering and technology solutions,Engineering Services
+SAIC,,12010 Sunset Hills Rd,Reston,VA,20190.0,USA,https://saic.com,Technology integrator,Engineering Services
+Leidos,,1750 Presidents St,Reston,VA,20190.0,USA,https://leidos.com,Defense and IT services,Engineering Services
+RS&H,,10748 Deerwood Park Blvd,Jacksonville,FL,32256.0,USA,https://rsandh.com,Architecture and engineering,Engineering Services
