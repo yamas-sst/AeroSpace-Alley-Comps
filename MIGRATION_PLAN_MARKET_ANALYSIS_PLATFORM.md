@@ -9,8 +9,12 @@
 
 ## Table of Contents
 
+0. [Prerequisites](#0-prerequisites)
 1. [Executive Summary](#1-executive-summary)
 2. [Current System Analysis](#2-current-system-analysis)
+   - 2.1 Legacy System Summary
+   - 2.2 Component Classification (Reuse/Refactor/Replace)
+   - 2.3 Detailed File Inventory
 3. [Target System Architecture](#3-target-system-architecture)
 4. [Data Flow Design](#4-data-flow-design)
 5. [Implementation Code](#5-implementation-code)
@@ -19,6 +23,35 @@
 8. [Step-by-Step Migration](#8-step-by-step-migration)
 9. [Testing Procedures](#9-testing-procedures)
 10. [Troubleshooting](#10-troubleshooting)
+11. [Trust, Governance, and Accuracy Guardrails](#11-trust-governance-and-accuracy-guardrails)
+12. [Concrete Next Actions](#12-concrete-next-actions)
+
+**Appendices:**
+- A: Apollo.io API Reference
+- B: Alternative Enrichment Providers
+- C: MapYourShow API Reference (Future Use)
+- D: Legacy System Reference
+
+---
+
+## 0. Prerequisites
+
+### Dependencies to Install
+
+```bash
+pip install pandas openpyxl requests
+```
+
+### Decision Context
+
+**Path Options Evaluated:**
+- **Path A**: Get MapYourShow API credentials → Build connector → Clean data (Fastest if credentials available)
+- **Path B**: Manual export from MapYourShow + enrichment pipeline ← **SELECTED**
+- **Path C**: Use Apify scraper ($5-50) → Build integration
+
+**Why Path B:** User collecting exhibitor data manually from MapYourShow gallery; API credentials not yet available.
+
+**Key Constraint:** 3 days, not 17 weeks. Speed and accuracy prioritized.
 
 ---
 
@@ -98,6 +131,38 @@ def validate_company_match(target_company, api_company, threshold=0.65):
     similarity = SequenceMatcher(None, target_clean, api_clean).ratio()
     return similarity >= threshold
 ```
+
+### 2.2 Component Classification (Reuse/Refactor/Replace)
+
+| Component | Location | Classification | 3-Day Action |
+|-----------|----------|----------------|--------------|
+| **Token Bucket Rate Limiter** | `rate_limit_protection.py:139-220` | ✅ **Reuse as-is** | Import directly |
+| **Circuit Breaker** | `rate_limit_protection.py:227-325` | ✅ **Reuse as-is** | Import directly |
+| **Exponential Backoff** | `rate_limit_protection.py:332-409` | ✅ **Reuse as-is** | Import directly |
+| **Audit Logger** | `rate_limit_protection.py:533-626` | ✅ **Reuse as-is** | Import directly |
+| **Fuzzy Company Matching** | `AeroComps.py:315-345` | ✅ **Reuse as-is** | Copy function |
+| **Health Monitor** | `rate_limit_protection.py:633-841` | 🔧 Refactor | Use as-is for now |
+| **API Usage Tracker** | `api_usage_tracker.py` | 🔧 Refactor | Use as-is for now |
+| **Company Tier System** | `AeroComps.py:702-854` | 🔧 Refactor | Skip (not needed for enrichment) |
+| **Job Filtering** | `AeroComps.py:537-568` | 🔧 Refactor | Skip (not needed) |
+| **Analytics Module** | `analytics.py` | 🔧 Refactor | Skip for now |
+| **SerpAPI Query Builder** | `AeroComps.py:918-962` | 🔄 Replace | New Apollo connector |
+| **SerpAPI Response Parser** | `AeroComps.py:1098-1123` | 🔄 Replace | New Apollo parser |
+| **Main Execution Loop** | `AeroComps.py:1186-1246` | 🔄 Replace | New pipeline script |
+
+### 2.3 Detailed File Inventory
+
+| File | Lines | Purpose | Disposition |
+|------|-------|---------|-------------|
+| `AeroComps.py` | 1,318 | SerpAPI job scanner | **Leave as-is** |
+| `resources/rate_limit_protection.py` | 956 | API protection layer | **Import from** |
+| `resources/api_usage_tracker.py` | 342 | Quota tracking | **Import from** |
+| `resources/analytics.py` | 513 | Job analytics | Leave as-is |
+| `resources/config.json` | 77 | Legacy config | Leave as-is |
+| `diagnostics/setup_check.py` | 184 | Pre-flight checks | Leave as-is |
+| `diagnostics/check_block_status.py` | 302 | IP block diagnosis | Leave as-is |
+| `data/Aerospace_Alley_Companies.xlsx` | - | 137 CT aerospace companies | Leave as-is |
+| `log/api_audit.jsonl` | - | API call audit trail | Leave as-is |
 
 ---
 
@@ -1080,6 +1145,116 @@ print(df.iloc[0])
 
 ---
 
+## 11. Trust, Governance, and Accuracy Guardrails
+
+### 11.1 Provenance Tracking (Built Into System)
+
+Every contact record includes:
+
+| Field | Purpose | Example |
+|-------|---------|---------|
+| `source` | Which API provided the data | "apollo" |
+| `source_record_id` | Original record ID in source system | "apollo-abc123" |
+| `enriched_at` | Timestamp when data was fetched | "2026-01-06 12:00:00" |
+| `confidence_score` | Data completeness score (0-100%) | "85%" |
+
+### 11.2 Data Quality Signals
+
+The confidence score is calculated based on:
+
+```python
+score = 0.0
+if email: score += 0.3           # Has email
+if email_verified: score += 0.2  # Email is verified
+if phone: score += 0.2           # Has phone number
+if linkedin: score += 0.15       # Has LinkedIn URL
+if title: score += 0.15          # Has job title
+# Max score: 1.0 (100%)
+```
+
+### 11.3 Audit Trail
+
+All API calls are logged to `log/enrichment_audit.jsonl`:
+
+```json
+{
+  "timestamp": "2026-01-06T12:00:00Z",
+  "event_type": "api_call",
+  "company": "Lockheed Martin",
+  "status_code": 200,
+  "response_time_ms": 450.5,
+  "contacts_found": 5,
+  "api_key_label": "apollo"
+}
+```
+
+### 11.4 What's NOT Covered (Future Scope)
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Export audit logs (who exported what) | ❌ Future | Add when CRM integration built |
+| Multi-source survivorship rules | ❌ Future | Only one source (Apollo) currently |
+| Data retention policies | ❌ Future | Define when compliance requires |
+| GDPR/privacy compliance | ⚠️ Manual | User responsible for data handling |
+
+---
+
+## 12. Concrete Next Actions
+
+### Immediate (Day 1)
+
+1. **Create directory structure** (5 min)
+   ```bash
+   mkdir -p market_intel/connectors market_intel/data market_intel/templates market_intel/output
+   ```
+
+2. **Copy code from Section 5** into files (30 min)
+
+3. **Test with mock data** (5 min)
+   ```bash
+   python market_intel/enrich_exhibitors.py --mock
+   ```
+
+### Day 2
+
+4. **Collect exhibitor data from MapYourShow** (manual)
+   - URL: https://spc26.mapyourshow.com/8_0/explore/exhibitor-gallery.cfm
+   - Save to: `market_intel/data/exhibitors.csv`
+
+5. **Get Apollo.io API key**
+   - URL: https://app.apollo.io/#/settings/integrations/api
+   - Free tier: 50 credits/month
+
+6. **Update config with API key**
+   - Edit: `market_intel/config.json`
+
+### Day 3
+
+7. **Run production enrichment**
+   ```bash
+   python market_intel/enrich_exhibitors.py
+   ```
+
+8. **Validate output**
+   - Check `market_intel/output/enriched_contacts.xlsx`
+   - Review Contacts, Companies, Metadata sheets
+
+9. **Review audit log**
+   ```bash
+   cat log/enrichment_audit.jsonl
+   ```
+
+### What Can Be Postponed
+
+| Item | Reason |
+|------|--------|
+| ZoomInfo integration | Paid, enterprise only |
+| CRM export | Not needed for POC |
+| Multi-source enrichment | One source sufficient for POC |
+| Historical trend analysis | Future scope |
+
+---
+
 ## Appendix A: Apollo.io API Reference
 
 ### Authentication
@@ -1157,7 +1332,57 @@ To add a new provider:
 
 ---
 
-## Appendix C: Legacy System Reference
+## Appendix C: MapYourShow API Reference (Future Use)
+
+If MapYourShow API credentials become available:
+
+### Official REST API
+
+- **Documentation:** https://api.mapyourshow.com/mysRest/v2/
+- **Authentication:** Bearer token (60-minute validity)
+
+### Key Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/Exhibitors` | GET | Get exhibitor details by ID or booth |
+| `/Exhibitors/Modified` | GET | Get recently updated exhibitors |
+| `/Exhibitors/Detail` | GET | Full exhibitor data including contacts |
+
+### Authentication Flow
+
+```python
+# 1. Get auth token
+response = requests.post(
+    "https://api.mapyourshow.com/mysRest/v2/auth",
+    json={"api_key": "YOUR_KEY", "api_secret": "YOUR_SECRET"}
+)
+token = response.json()["token"]  # Valid 60 minutes
+
+# 2. Use token in subsequent calls
+headers = {"Authorization": f"Bearer {token}"}
+response = requests.get(
+    "https://api.mapyourshow.com/mysRest/v2/Exhibitors",
+    headers=headers
+)
+```
+
+### Alternative: Apify Scraper
+
+If API access not available:
+- **URL:** https://apify.com/skython/map-your-show-exhibitor-list-scraper
+- **Cost:** ~$5-50 depending on volume
+- **Output:** JSON with exhibitor data
+
+### Event-Specific URL
+
+SpaceCom | Space Mobility 2026:
+- **Gallery:** https://spc26.mapyourshow.com/8_0/explore/exhibitor-gallery.cfm
+- **Floor Plan:** https://spc26.mapyourshow.com/8_0/floorplan/index.cfm
+
+---
+
+## Appendix D: Legacy System Reference
 
 ### Files NOT to Modify
 
