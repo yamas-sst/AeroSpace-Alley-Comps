@@ -1,0 +1,30 @@
+{
+  "input_file": "market_intel/data/exhibitors.csv",
+  "output_file": "market_intel/output/enriched_contacts.xlsx",
+
+  "enrichment": {
+    "provider": "apollo",
+    "api_key": "YOUR_APOLLO_API_KEY_HERE",
+    "rate_limit": {
+      "calls_per_minute": 10,
+      "min_interval_seconds": 6
+    }
+  },
+
+  "target_titles": [
+    "CEO", "President", "Owner", "Founder",
+    "VP", "Vice President",
+    "Director",
+    "Manager",
+    "Head of",
+    "Chief"
+  ],
+
+  "target_departments": [
+    "Engineering",
+    "Sales",
+    "Business Development",
+    "Operations",
+    "Procurement"
+  ]
+}
