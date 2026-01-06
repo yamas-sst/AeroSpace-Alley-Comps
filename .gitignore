@@ -57,3 +57,7 @@ log/*.json
 # Test output
 test_*.py
 *_test.py
+
+# Generated output files
+output/
+market_intel/output/
