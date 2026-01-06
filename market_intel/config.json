@@ -1,0 +1,48 @@
+{
+  "input_file": "data/exhibitors.csv",
+  "output_file": "output/enriched_contacts.xlsx",
+
+  "enrichment": {
+    "enabled": true,
+    "provider": "apollo",
+    "api_key": "YOUR_API_KEY_HERE",
+    "rate_limit": {
+      "calls_per_minute": 10,
+      "min_interval_seconds": 6
+    }
+  },
+
+  "target_titles": [
+    "CEO", "President", "Owner",
+    "VP", "Vice President",
+    "Director",
+    "Manager",
+    "Head of",
+    "Chief",
+    "Founder"
+  ],
+
+  "target_departments": [
+    "Engineering",
+    "Sales",
+    "Business Development",
+    "Operations",
+    "Procurement",
+    "Supply Chain"
+  ],
+
+  "output_fields": [
+    "company_name",
+    "booth_number",
+    "company_website",
+    "company_address",
+    "contact_name",
+    "contact_title",
+    "contact_email",
+    "contact_phone",
+    "contact_linkedin",
+    "enrichment_source",
+    "enrichment_date",
+    "confidence_score"
+  ]
+}
