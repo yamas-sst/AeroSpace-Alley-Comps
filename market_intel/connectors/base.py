@@ -1,7 +1,7 @@
 """
 Base Connector Interface for Contact Enrichment
 
-Reuses rate limiting from legacy protection layer.
+Reuses rate limiting from legacy protection layer (preserved in market_intel/legacy/).
 """
 
 from abc import ABC, abstractmethod
@@ -12,10 +12,8 @@ import sys
 import os
 import time
 
-# Add parent directory to path for legacy imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-
-from resources.rate_limit_protection import (
+# Import from local legacy folder (self-contained package)
+from market_intel.legacy import (
     TokenBucketRateLimiter,
     CircuitBreaker,
     ExponentialBackoff,
