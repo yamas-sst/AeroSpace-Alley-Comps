@@ -1,4 +1,0 @@
-company_name,booth_number,address,city,state,zip,country,website,description,category
-"Example Aerospace Inc","A-101","123 Main Street","Houston","TX","77001","USA","https://example-aerospace.com","Leading provider of satellite components","Satellite Systems"
-"Space Widgets LLC","B-205","456 Industrial Blvd","Denver","CO","80202","USA","https://spacewidgets.com","Precision manufacturing for launch vehicles","Manufacturing"
-"Orbital Dynamics Corp","C-310","789 Tech Park Way","Los Angeles","CA","90001","USA","https://orbitaldynamics.com","Mission planning and orbital mechanics software","Software"
