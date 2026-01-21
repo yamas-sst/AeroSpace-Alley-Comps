@@ -971,6 +971,7 @@ Company Processing:
 - Improve company name matching
 
 **v2.4 (Q1 2026) - Enhancements:**
+- Configurable per-company job caps via config.json (override tier defaults)
 - Automated weekly scheduling
 - Historical tracking database
 - Change detection (new jobs, removed jobs)
