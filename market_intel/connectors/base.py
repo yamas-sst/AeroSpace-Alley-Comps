@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from urllib.parse import urlparse
 import sys
 import os
 import time
@@ -36,14 +37,20 @@ class Company:
     category: str = ""
 
     def get_domain(self) -> Optional[str]:
-        """Extract domain from website URL."""
+        """Extract domain from website URL using standard urllib parsing."""
         if not self.website:
             return None
-        domain = self.website.lower()
-        domain = domain.replace("https://", "").replace("http://", "")
-        domain = domain.replace("www.", "")
-        domain = domain.split("/")[0]
-        return domain
+        url = self.website.strip().lower()
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        parsed = urlparse(url)
+        domain = parsed.netloc or parsed.path.split('/')[0]
+        # Remove port if present
+        domain = domain.split(':')[0]
+        # Remove www. prefix
+        if domain.startswith('www.'):
+            domain = domain[4:]
+        return domain if domain else None
 
 
 @dataclass
