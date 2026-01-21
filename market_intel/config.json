@@ -1,6 +1,6 @@
 {
-  "input_file": "data/exhibitors.csv",
-  "output_file": "output/enriched_contacts.xlsx",
+  "input_file": "market_intel/data/exhibitors.csv",
+  "output_file": "market_intel/output/enriched_contacts.xlsx",
 
   "enrichment": {
     "provider": "apollo",
