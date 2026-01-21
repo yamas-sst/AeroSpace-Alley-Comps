@@ -133,6 +133,207 @@ class ConfigurationValidator:
 
 
 # =============================================================================
+# LAYER 1.5: API KEY MANAGER (Production Key Rotation)
+# =============================================================================
+
+class APIKeyManager:
+    """
+    Thread-safe API key manager with automatic rotation for production runs.
+
+    Features:
+    - Tracks usage per key against individual limits
+    - Auto-rotates to backup key when primary exhausted
+    - Pre-rotation checkpoint signaling for data safety
+    - Audit trail of which key processed which companies
+    - Only enabled in production mode (not testing tiers)
+
+    Safety Guarantees:
+    - All state changes protected by lock
+    - Checkpoint save triggered BEFORE rotation
+    - Clear audit trail for debugging
+    """
+
+    def __init__(self, config: Dict, production_mode: bool = False):
+        """
+        Initialize API Key Manager.
+
+        Args:
+            config: Configuration dict with 'api_keys' array
+            production_mode: If False, rotation disabled (testing mode)
+        """
+        self.keys = config.get('api_keys', [])
+        self.production_mode = production_mode
+        self.current_index = 0
+        self.lock = Lock()
+
+        # Per-key tracking
+        self.calls_per_key = {}
+        self.exhausted_keys = set()
+        self.rotation_log = []  # Audit trail
+
+        for key_info in self.keys:
+            label = key_info.get('label', f'key_{self.keys.index(key_info)}')
+            self.calls_per_key[label] = 0
+
+        if self.keys:
+            current = self.keys[self.current_index]
+            print(f"🔑 API Key Manager initialized:")
+            print(f"   Active key: {current.get('label', 'unknown')}")
+            print(f"   Total keys: {len(self.keys)}")
+            print(f"   Rotation enabled: {production_mode} (production mode)")
+
+    def get_current_key(self) -> Optional[Dict]:
+        """Get current active API key info (thread-safe)."""
+        with self.lock:
+            if self.current_index < len(self.keys):
+                return self.keys[self.current_index]
+            return None
+
+    def get_current_key_value(self) -> Optional[str]:
+        """Get current API key string."""
+        key_info = self.get_current_key()
+        return key_info.get('key') if key_info else None
+
+    def get_current_key_label(self) -> str:
+        """Get current API key label."""
+        key_info = self.get_current_key()
+        return key_info.get('label', 'unknown') if key_info else 'none'
+
+    def get_current_key_limit(self) -> int:
+        """Get current key's monthly limit."""
+        key_info = self.get_current_key()
+        return key_info.get('monthly_limit', 250) if key_info else 0
+
+    def increment_and_check(self) -> tuple:
+        """
+        Increment call counter and check if rotation needed.
+
+        Returns:
+            tuple: (can_continue, needs_rotation, needs_checkpoint_save, message)
+            - can_continue: True if processing can continue
+            - needs_rotation: True if should rotate to next key
+            - needs_checkpoint_save: True if should save before continuing
+            - message: Status message for logging
+        """
+        with self.lock:
+            if self.current_index >= len(self.keys):
+                return (False, False, True, "All API keys exhausted")
+
+            key_info = self.keys[self.current_index]
+            label = key_info.get('label', 'unknown')
+            limit = key_info.get('monthly_limit', 250)
+
+            self.calls_per_key[label] += 1
+            current_calls = self.calls_per_key[label]
+
+            # Check if approaching limit (95% warning)
+            if current_calls == int(limit * 0.95):
+                print(f"⚠️  API key '{label}' at 95% capacity ({current_calls}/{limit})")
+
+            # Check if limit reached
+            if current_calls >= limit:
+                self.exhausted_keys.add(self.current_index)
+
+                # Check if we can rotate (production mode only)
+                if self.production_mode and self.current_index + 1 < len(self.keys):
+                    return (True, True, True,
+                            f"Key '{label}' exhausted ({current_calls}/{limit}). Ready to rotate.")
+                else:
+                    return (False, False, True,
+                            f"Key '{label}' exhausted ({current_calls}/{limit}). No backup available.")
+
+            return (True, False, False, None)
+
+    def rotate_to_next_key(self, last_company_processed: str = "") -> bool:
+        """
+        Rotate to next API key. Call AFTER checkpoint save.
+
+        Args:
+            last_company_processed: Name of last company for audit trail
+
+        Returns:
+            True if rotation successful, False if no more keys
+        """
+        with self.lock:
+            if self.current_index + 1 >= len(self.keys):
+                return False
+
+            old_key = self.keys[self.current_index].get('label', 'unknown')
+            self.current_index += 1
+            new_key = self.keys[self.current_index].get('label', 'unknown')
+
+            # Log rotation event
+            rotation_event = {
+                'timestamp': datetime.now().isoformat(),
+                'from_key': old_key,
+                'to_key': new_key,
+                'last_company': last_company_processed,
+                'calls_on_old_key': self.calls_per_key.get(old_key, 0)
+            }
+            self.rotation_log.append(rotation_event)
+
+            print(f"\n{'='*60}")
+            print(f"🔄 API KEY ROTATION")
+            print(f"   From: {old_key} (exhausted)")
+            print(f"   To: {new_key}")
+            print(f"   Last company on old key: {last_company_processed}")
+            print(f"{'='*60}\n")
+
+            return True
+
+    def all_keys_exhausted(self) -> bool:
+        """Check if all API keys are exhausted."""
+        with self.lock:
+            return len(self.exhausted_keys) >= len(self.keys)
+
+    def get_usage_summary(self) -> Dict:
+        """Get usage summary for all keys."""
+        with self.lock:
+            summary = {
+                'current_key': self.get_current_key_label(),
+                'current_index': self.current_index,
+                'total_keys': len(self.keys),
+                'exhausted_count': len(self.exhausted_keys),
+                'calls_per_key': dict(self.calls_per_key),
+                'rotation_log': list(self.rotation_log)
+            }
+            return summary
+
+    def get_total_calls(self) -> int:
+        """Get total API calls across all keys."""
+        with self.lock:
+            return sum(self.calls_per_key.values())
+
+    def check_rotation_needed(self) -> tuple:
+        """
+        Check if rotation is needed WITHOUT incrementing counter.
+        Use this in main loop to check status after processing a company.
+
+        Returns:
+            tuple: (needs_rotation, all_exhausted, current_key_label)
+        """
+        with self.lock:
+            if self.current_index >= len(self.keys):
+                return (False, True, 'none')
+
+            key_info = self.keys[self.current_index]
+            label = key_info.get('label', 'unknown')
+            limit = key_info.get('monthly_limit', 250)
+            current_calls = self.calls_per_key.get(label, 0)
+
+            # Check if current key is at limit
+            at_limit = current_calls >= limit
+
+            if at_limit:
+                # Check if we can rotate
+                can_rotate = self.production_mode and (self.current_index + 1 < len(self.keys))
+                all_exhausted = not can_rotate
+                return (can_rotate, all_exhausted, label)
+
+            return (False, False, label)
+
+
+# =============================================================================
 # LAYER 2: TOKEN BUCKET RATE LIMITER
 # =============================================================================
 
@@ -945,6 +1146,7 @@ class RateLimitProtectionCoordinator:
 # Export main classes
 __all__ = [
     'ConfigurationValidator',
+    'APIKeyManager',
     'TokenBucketRateLimiter',
     'CircuitBreaker',
     'ExponentialBackoff',

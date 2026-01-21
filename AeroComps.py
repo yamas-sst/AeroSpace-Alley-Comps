@@ -32,7 +32,8 @@ from resources.rate_limit_protection import (
     ConfigurationValidator,
     RateLimitProtectionCoordinator,
     ComprehensiveAuditLogger,
-    EnhancedHealthMonitor
+    EnhancedHealthMonitor,
+    APIKeyManager
 )
 
 # ======================================================
@@ -174,6 +175,22 @@ except Exception as e:
 
 
 # ======================================================
+# API KEY MANAGER: Production Key Rotation
+# ======================================================
+# Initialize key manager with rotation enabled ONLY in production mode
+PRODUCTION_MODE = not TESTING_MODE
+key_manager = APIKeyManager(CONFIG, production_mode=PRODUCTION_MODE)
+
+if key_manager.get_current_key() is None:
+    print("\n" + "="*70)
+    print("❌ NO API KEYS CONFIGURED")
+    print("="*70)
+    print("Please add API keys to resources/config.json")
+    print("="*70 + "\n")
+    exit(1)
+
+
+# ======================================================
 # API USAGE TRACKER: Persistent State Management
 # ======================================================
 from resources.api_usage_tracker import PersistentAPIUsageTracker
@@ -181,7 +198,7 @@ from resources.api_usage_tracker import PersistentAPIUsageTracker
 # Initialize tracker
 usage_tracker = PersistentAPIUsageTracker(CONFIG)
 
-# Get available API key
+# Get available API key (for initial validation)
 api_key_info, remaining_calls = usage_tracker.get_available_key()
 
 if api_key_info is None:
@@ -196,8 +213,9 @@ if api_key_info is None:
     print("="*70 + "\n")
     exit(1)
 
-API_KEY = api_key_info['key']
-API_KEY_LABEL = api_key_info['label']
+# Use key manager for API key (allows rotation in production)
+API_KEY = key_manager.get_current_key_value()
+API_KEY_LABEL = key_manager.get_current_key_label()
 
 # ======================================================
 # CONFIGURATION CONSTANTS (Loaded from config.json)
@@ -363,7 +381,7 @@ def validate_company_match(target_company, api_company, threshold=0.65):
 #   requests.Response object if successful, None if quota exceeded
 
 def safe_api_request(params, company):
-    global api_calls, last_call_time, api_limit_reached
+    global api_calls, last_call_time, api_limit_reached, API_KEY, API_KEY_LABEL
 
     # CHECK CIRCUIT BREAKER: Stop if too many failures
     if not circuit_breaker.is_available():
@@ -375,7 +393,17 @@ def safe_api_request(params, company):
 
     # Critical section: Only one thread can access API counter at a time
     with api_lock:
-        # Check if we've hit the API quota limit
+        # Check via key_manager if we can continue
+        can_continue, needs_rotation, needs_save, msg = key_manager.increment_and_check()
+
+        if not can_continue and not needs_rotation:
+            # All keys exhausted
+            if not api_limit_reached:
+                api_limit_reached = True
+                print(f"\n⚠️ ALL API KEYS EXHAUSTED — Processing will stop.\n")
+            return None
+
+        # Legacy counter for backwards compatibility
         if api_calls >= MAX_API_CALLS:
             if not api_limit_reached:
                 api_limit_reached = True
@@ -1209,7 +1237,49 @@ for i, company in enumerate(tqdm(companies, desc="Processing companies")):
             print(f"\n⚠️ SerpAPI appears to have issues. Stopping to prevent IP block.")
             print(f"   Check log/api_audit.jsonl for detailed analysis.")
             print(f"{'='*60}\n")
+            # CHECKPOINT SAVE before stopping
+            if results:
+                pd.DataFrame(results).drop_duplicates(subset=["Company", "Job Title", "Source URL"]).to_excel(OUTPUT_FILE, index=False)
+                print(f"💾 Emergency checkpoint saved ({len(results)} records) before stopping")
             break  # Stop processing to prevent further issues
+
+        # CHECK FOR API KEY ROTATION (Production mode only)
+        # Increment happens in safe_api_request(), here we just check status
+        needs_rotation, all_exhausted, current_key = key_manager.check_rotation_needed()
+
+        if needs_rotation:
+            # CHECKPOINT SAVE: Always save BEFORE rotating keys
+            if results:
+                pd.DataFrame(results).drop_duplicates(subset=["Company", "Job Title", "Source URL"]).to_excel(OUTPUT_FILE, index=False)
+                print(f"💾 Pre-rotation checkpoint saved ({len(results)} records)")
+
+            # Rotate to backup API key
+            if key_manager.rotate_to_next_key(last_company_processed=company):
+                # Update global API_KEY reference for safe_api_request()
+                API_KEY = key_manager.get_current_key_value()
+                API_KEY_LABEL = key_manager.get_current_key_label()
+                print(f"✅ Now using: {API_KEY_LABEL}")
+                # Reset the api_limit_reached flag since we have a new key
+                api_limit_reached = False
+            else:
+                # Rotation failed (shouldn't happen if needs_rotation is True)
+                print(f"\n{'='*60}")
+                print(f"🛑 API KEY ROTATION FAILED")
+                print(f"{'='*60}")
+                break
+
+        elif all_exhausted:
+            # All keys exhausted, save and stop
+            if results:
+                pd.DataFrame(results).drop_duplicates(subset=["Company", "Job Title", "Source URL"]).to_excel(OUTPUT_FILE, index=False)
+                print(f"💾 Final checkpoint saved ({len(results)} records)")
+            print(f"\n{'='*60}")
+            print(f"🛑 ALL API KEYS EXHAUSTED")
+            print(f"   Key '{current_key}' has reached its limit.")
+            print(f"   No backup keys available.")
+            print(f"{'='*60}")
+            print(key_manager.get_usage_summary())
+            break
 
         # CHECKPOINT SAVE: Every 25 companies, save progress to disk
         # This prevents losing all data if script crashes or API limit is hit
