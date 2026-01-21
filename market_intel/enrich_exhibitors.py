@@ -2,10 +2,10 @@
 """
 Exhibitor Contact Enrichment Pipeline
 
-Usage:
-    python market_intel/enrich_exhibitors.py --mock              # Test mode
-    python market_intel/enrich_exhibitors.py                     # Production
-    python market_intel/enrich_exhibitors.py --input data/my.csv # Custom input
+Usage (from within market_intel directory):
+    python enrich_exhibitors.py --mock              # Test mode
+    python enrich_exhibitors.py                     # Production
+    python enrich_exhibitors.py --input data/my.csv # Custom input
 """
 
 import os
@@ -16,18 +16,27 @@ import pandas as pd
 from datetime import datetime
 from typing import List, Dict, Any
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Get the directory where this script lives
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Add script directory to path for imports
+sys.path.insert(0, SCRIPT_DIR)
+sys.path.insert(0, os.path.dirname(SCRIPT_DIR))
 
 from market_intel.connectors.base import Company, EnrichmentResult
 from market_intel.connectors.apollo import ApolloConnector, MockApolloConnector
 
 
-def load_config(config_path: str = "market_intel/config.json") -> Dict[str, Any]:
+def load_config(config_path: str = None) -> Dict[str, Any]:
     """Load configuration from JSON file."""
+    # Default config path relative to script location
+    if config_path is None:
+        config_path = os.path.join(SCRIPT_DIR, "config.json")
+
     if not os.path.exists(config_path):
         return {
-            "input_file": "market_intel/data/exhibitors.csv",
-            "output_file": "market_intel/output/enriched_contacts.xlsx",
+            "input_file": os.path.join(SCRIPT_DIR, "data/exhibitors.csv"),
+            "output_file": os.path.join(SCRIPT_DIR, "output/enriched_contacts.xlsx"),
             "enrichment": {
                 "provider": "apollo",
                 "api_key": "YOUR_API_KEY_HERE",
@@ -35,7 +44,15 @@ def load_config(config_path: str = "market_intel/config.json") -> Dict[str, Any]
             }
         }
     with open(config_path, 'r') as f:
-        return json.load(f)
+        config = json.load(f)
+
+    # Make paths absolute relative to script directory
+    if not os.path.isabs(config.get('input_file', '')):
+        config['input_file'] = os.path.join(SCRIPT_DIR, config['input_file'])
+    if not os.path.isabs(config.get('output_file', '')):
+        config['output_file'] = os.path.join(SCRIPT_DIR, config['output_file'])
+
+    return config
 
 
 def load_exhibitors(input_file: str) -> List[Company]:
@@ -129,7 +146,7 @@ def main():
     parser.add_argument('--input', type=str, help='Input CSV file')
     parser.add_argument('--output', type=str, help='Output Excel file')
     parser.add_argument('--mock', action='store_true', help='Use mock data (no API)')
-    parser.add_argument('--config', type=str, default='market_intel/config.json')
+    parser.add_argument('--config', type=str, default=None, help='Config file path')
     args = parser.parse_args()
 
     print("\n" + "=" * 60)

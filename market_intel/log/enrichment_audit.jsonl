@@ -1,0 +1,2 @@
+{"timestamp": "2026-01-21T00:27:43.436108Z", "event_type": "audit_logger_initialized", "log_file": "log/enrichment_audit.jsonl"}
+{"timestamp": "2026-01-21T00:27:43.436561Z", "event_type": "api_call", "company": "Test Company", "status_code": 200, "response_time_ms": 0.05507469177246094, "jobs_found": 2, "api_key_label": "mock_apollo"}
